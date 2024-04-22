@@ -1,0 +1,39 @@
+# <type>(<scope>): <subject>
+# |<---- Using a maximum of 50 characters ----->|
+
+# <BLANK LINE>
+
+# <body>
+# |<---- Try to limit each line to a maximum of 72 characters ------->|
+
+# <BLANK LINE>
+
+# <footer>
+# [Option] Issue tracker number or URL
+
+# --- COMMIT END ---
+# Type can be
+#   feat     : A new feature
+#   fix      : A bug fix
+#   docs     : Changes to documentation
+#              README or markdown files
+#   refactor : Refactoring production code
+#   perf     : Changes that improves performance
+#   style    : Changes style or formatting
+#              white-space, missing semi-colons, etc
+#              no production code change
+#   test     : Adding tests or correcting existing tests
+#              no production code change
+#   build    : Changes that affect the build system
+#              or external dependencies
+#   chore    : Updating grunt tasks etc
+#              no production code change
+# ------------------
+# Remember to
+#  - Capitalize the subject line
+#  - Use the imperative mood in the subject line
+#  - Do not end the subject line with a period
+#  - Seperate subject from body with a blank line
+#  - Use the body to explain what and why vs. how
+#  - Can use multiple lines with "-" for bullet points in body
+# ------------------
