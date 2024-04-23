@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.project.alfa.repositories.mybatis.AttachmentMapper">
+    
+    <resultMap id="AttachmentResultMap" type="Attachment">
+        <id property="id" column="post_attachment_id"/>
+        <id property="postId" column="post_id"/>
+        <id property="originalFilename" column="original_file_name"/>
+        <id property="storeFilename" column="store_file_name"/>
+        <id property="storeFilePath" column="store_file_path"/>
+        <id property="fileSize" column="file_size"/>
+        <id property="createdDate" column="created_date"/>
+        <id property="lastModifiedDate" column="last_modified_date"/>
+        <id property="deleteYn" column="delete_yn"/>
+    </resultMap>
+    
+    <insert id="save" useGeneratedKeys="true" keyColumn="post_attachment_id" keyProperty="id">
+        INSERT INTO tbl_post_attachments(post_id, original_file_name, store_file_name, store_file_path, file_size)
+        VALUES (#{postId}, #{originalFilename}, #{storeFilename}, #{storeFilePath}, #{fileSize});
+    </insert>
+    
+    <insert id="saveAll" useGeneratedKeys="true" keyColumn="post_attachment_id" keyProperty="id">
+        SET AUTOCOMMIT = 0;
+        INSERT INTO tbl_post_attachments(post_id, original_file_name, store_file_name, store_file_path, file_size)
+        VALUES
+        <foreach collection="params" item="param" separator=",">
+            (#{param.postId},
+            #{param.originalFilename},
+            #{param.storeFilename},
+            #{param.storeFilePath},
+            #{param.fileSize})
+        </foreach>
+        ;
+        COMMIT;
+        SET AUTOCOMMIT = 1;
+    </insert>
+    
+    <select id="findById" resultMap="AttachmentResultMap">
+        SELECT *
+        FROM tbl_post_attachments
+        WHERE post_attachment_id = #{id};
+    </select>
+    
+    <select id="findByIdAndDeleteYn" resultMap="AttachmentResultMap">
+        SELECT *
+        FROM tbl_post_attachments
+        WHERE post_attachment_id = #{id}
+          AND delete_yn = #{deleteYn};
+    </select>
+    
+    <select id="findAll" resultMap="AttachmentResultMap">
+        SELECT *
+        FROM tbl_post_attachments;
+    </select>
+    
+    <select id="findAllByDeleteYn" resultMap="AttachmentResultMap">
+        SELECT *
+        FROM tbl_post_attachments
+        WHERE delete_yn = #{deleteYn};
+    </select>
+    
+    <select id="findAllByIds" resultMap="AttachmentResultMap">
+        SELECT *
+        FROM tbl_post_attachments
+        WHERE post_attachment_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        ;
+    </select>
+    
+    <select id="findAllByIdsAndDeleteYn" resultMap="AttachmentResultMap">
+        SELECT *
+        FROM tbl_post_attachments
+        WHERE post_attachment_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        AND delete_yn = #{deleteYn};
+    </select>
+    
+    <select id="findAllByPost" resultMap="AttachmentResultMap">
+        SELECT *
+        FROM tbl_post_attachments
+        WHERE post_id = #{postId};
+    </select>
+    
+    <select id="findAllByPostAndDeleteYn" resultMap="AttachmentResultMap">
+        SELECT *
+        FROM tbl_post_attachments
+        WHERE post_id = #{postId}
+          AND delete_yn = #{deleteYn};
+    </select>
+    
+    <update id="deleteById">
+        UPDATE tbl_post_attachments
+        SET delete_yn = 1
+        WHERE post_attachment_id = #{id}
+          AND post_id = #{postId};
+    </update>
+    
+    <delete id="permanentlyDeleteById">
+        DELETE
+        FROM tbl_post_attachments
+        WHERE post_attachment_id = #{id}
+          AND delete_yn = 1;
+    </delete>
+    
+    <update id="deleteAllByIds">
+        UPDATE tbl_post_attachments
+        SET delete_yn = 1
+        WHERE post_attachment_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        AND post_id = #{postId}
+        AND delete_yn = 0;
+    </update>
+    
+    <delete id="permanentlyDeleteAllByIds">
+        DELETE
+        FROM tbl_post_attachments
+        WHERE post_attachment_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        AND delete_yn = 1;
+    </delete>
+
+</mapper>

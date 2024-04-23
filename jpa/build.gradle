@@ -1,0 +1,95 @@
+//Querydsl
+buildscript {
+	ext {
+		queryDslVersion = '5.0.0'
+	}
+}
+
+plugins {
+	id 'java'
+	id 'org.springframework.boot' version '2.7.18'
+	id 'io.spring.dependency-management' version '1.0.15.RELEASE'
+	//Lombok
+	id 'io.freefair.lombok' version '6.6.3'
+	//Querydsl
+	id 'com.ewerk.gradle.plugins.querydsl' version '1.0.10'
+}
+
+group = 'com.project'
+version = '0.0.1-SNAPSHOT'
+
+java {
+	sourceCompatibility = '1.8'
+}
+
+configurations {
+	compileOnly {
+		extendsFrom annotationProcessor
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-aop'
+	implementation 'org.springframework.boot:spring-boot-starter-cache'
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+	implementation 'org.springframework.boot:spring-boot-starter-mail'
+	implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+	implementation 'org.springframework.boot:spring-boot-starter-security'
+	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+	implementation 'org.springframework.boot:spring-boot-starter-validation'
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.thymeleaf.extras:thymeleaf-extras-springsecurity5'
+	//Jackson Datatype: JSR310
+	implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+	//Jackson Databind
+	implementation 'com.fasterxml.jackson.core:jackson-databind'
+	//Gson
+	implementation 'com.google.code.gson:gson:2.10.1'
+	//Querydsl
+	implementation "com.querydsl:querydsl-jpa:${queryDslVersion}"
+	//Spring Boot DataSource Decorator - P6Spy
+	implementation 'com.github.gavlyukovskiy:p6spy-spring-boot-starter:1.8.1'
+	//Thymeleaf Layout Dialect
+	implementation 'nz.net.ultraq.thymeleaf:thymeleaf-layout-dialect'
+	
+	developmentOnly 'org.springframework.boot:spring-boot-devtools'
+	runtimeOnly 'com.h2database:h2'
+	annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+	//Querydsl
+	annotationProcessor "com.querydsl:querydsl-apt:${queryDslVersion}"
+	
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testImplementation 'org.springframework.security:spring-security-test'
+	//Embedded Redis
+	testImplementation 'it.ozimov:embedded-redis:0.7.2'
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}
+
+//Querydsl - Start
+def querydslDir = "$buildDir/generated/querydsl"
+
+querydsl {
+	jpa = true
+	querydslSourcesDir = querydslDir
+}
+
+sourceSets {
+	main.java.srcDir querydslDir
+}
+
+configurations {
+	querydsl.extendsFrom compileClasspath
+}
+
+compileQuerydsl {
+	options.annotationProcessorPath = configurations.querydsl
+}
+//Querydsl - End

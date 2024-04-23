@@ -1,0 +1,113 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+  error:
+    path: /error
+
+spring:
+  devtools:
+    livereload:
+      enabled: true
+  datasource:
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:tcp://localhost/~/test;MODE=MYSQL;DATABASE_TO_LOWER=TRUE
+    username: sa
+    password:
+  sql:
+    init:
+      mode: always
+  jpa:
+    hibernate:
+      ddl-auto: create
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+    properties:
+      hibernate:
+        default_batch_fetch_size: 1000
+        globally_quoted_identifiers: true
+        show_sql: true
+        format_sql: true
+        use_sql_comments: true
+    open-in-view: false
+  data:
+    web:
+      pageable:
+        default-page-size: 20
+        max-page-size: 2000
+  servlet:
+    multipart:
+      enabled: true
+      file-size-threshold: 0B
+      max-file-size: 1MB
+      max-request-size: 10MB
+  redis:
+    host: localhost
+    port: 6379
+    password:
+    lettuce:
+      pool:
+        min-idle: 0
+        max-idle: 8
+        max-active: 8
+  thymeleaf:
+    prefix: classpath:/templates/
+    suffix: .html
+    cache: true
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: { Google OAuth 2.0 Client Id }
+            client-secret: { Google OAuth 2.0 Client Secret }
+            scope:
+              - email
+              - profile
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: { Google Username }
+    password: { Google Password }
+    properties:
+      mail:
+        smtp:
+          starttls:
+            enable: true
+            required: true
+          auth: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+
+logging:
+  level:
+    org.hibernate.sql: debug
+    org.hibernate.type: trace
+
+decorator:
+  datasource:
+    p6spy:
+      logging: slf4j
+      enable-logging: true
+      multiline: true
+
+file:
+  upload:
+    location: { File Upload Location }
+
+---
+
+spring:
+  config:
+    activate:
+      on-profile: test
+  datasource:
+    url: jdbc:h2:mem:test;MODE=MYSQL;DATABASE_TO_LOWER=TRUE
+  jpa:
+    hibernate:
+      ddl-auto: create-drop

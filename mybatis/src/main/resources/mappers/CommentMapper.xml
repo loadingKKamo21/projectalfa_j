@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.project.alfa.repositories.mybatis.CommentMapper">
+    
+    <resultMap id="CommentResultMap" type="Comment">
+        <id property="id" column="comment_id"/>
+        <id property="writerId" column="member_id"/>
+        <id property="nickname" column="nickname"/>
+        <id property="postId" column="post_id"/>
+        <id property="content" column="content"/>
+        <id property="createdDate" column="created_date"/>
+        <id property="lastModifiedDate" column="last_modified_date"/>
+        <id property="deleteYn" column="delete_yn"/>
+    </resultMap>
+    
+    <insert id="save" useGeneratedKeys="true" keyColumn="comment_id" keyProperty="id">
+        INSERT INTO tbl_comments(member_id, post_id, content)
+        VALUES (#{writerId}, #{postId}, #{content});
+    </insert>
+    
+    <select id="findById" resultMap="CommentResultMap">
+        SELECT comment.*, member.nickname AS nickname
+        FROM tbl_comments AS comment
+                 JOIN tbl_members AS member ON comment.member_id = member.member_id
+        WHERE comment.comment_id = #{id};
+    </select>
+    
+    <select id="findByIdAndDeleteYn" resultMap="CommentResultMap">
+        SELECT comment.*, member.nickname AS nickname
+        FROM tbl_comments AS comment
+                 JOIN tbl_members AS member ON comment.member_id = member.member_id AND member.delete_yn = #{deleteYn}
+        WHERE comment.comment_id = #{id}
+          AND comment.delete_yn = #{deleteYn};
+    </select>
+    
+    <select id="findAll" resultMap="CommentResultMap">
+        SELECT comment.*, member.nickname AS nickname
+        FROM tbl_comments AS comment
+                 JOIN tbl_members AS member ON comment.member_id = member.member_id;
+    </select>
+    
+    <select id="findAllByDeleteYn" resultMap="CommentResultMap">
+        SELECT comment.*, member.nickname AS nickname
+        FROM tbl_comments AS comment
+                 JOIN tbl_members AS member ON comment.member_id = member.member_id AND member.delete_yn = #{deleteYn}
+        WHERE comment.delete_yn = #{deleteYn};
+    </select>
+    
+    <select id="findAllByIds" resultMap="CommentResultMap">
+        SELECT comment.*, member.nickname AS nickname
+        FROM tbl_comments as comment
+        JOIN tbl_members AS member ON comment.member_id = member.member_id
+        WHERE comment.comment_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        ;
+    </select>
+    
+    <select id="findAllByIdsAndDeleteYn" resultMap="CommentResultMap">
+        SELECT comment.*, member.nickname AS nickname
+        FROM tbl_comments as comment
+        JOIN tbl_members AS member ON comment.member_id = member.member_id AND member.delete_yn = #{deleteYn}
+        WHERE comment.comment_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        AND comment.delete_yn = #{deleteYn};
+    </select>
+    
+    <select id="findAllByWriter" resultMap="CommentResultMap">
+        SELECT comment.*, member.nickname AS nickname
+        FROM tbl_comments AS comment
+                 JOIN tbl_members AS member ON comment.member_id = member.member_id
+        WHERE comment.member_id = #{writerId};
+    </select>
+    
+    <select id="findAllByWriterAndDeleteYn" resultMap="CommentResultMap">
+        SELECT comment.*, member.nickname AS nickname
+        FROM tbl_comments AS comment
+                 JOIN tbl_members AS member ON comment.member_id = member.member_id AND member.delete_yn = #{deleteYn}
+        WHERE comment.member_id = #{writerId}
+          AND comment.delete_yn = #{deleteYn};
+    </select>
+    
+    <select id="findAllByPost" resultMap="CommentResultMap">
+        SELECT comment.*, member.nickname AS nickname
+        FROM tbl_comments AS comment
+                 JOIN tbl_members AS member ON comment.member_id = member.member_id
+        WHERE comment.post_id = #{postId};
+    </select>
+    
+    <select id="findAllByPostAndDeleteYn" resultMap="CommentResultMap">
+        SELECT comment.*, member.nickname AS nickname
+        FROM tbl_comments AS comment
+                 JOIN tbl_members AS member ON comment.member_id = member.member_id AND member.delete_yn = #{deleteYn}
+        WHERE comment.post_id = #{postId}
+          AND comment.delete_yn = #{deleteYn};
+    </select>
+    
+    <update id="update">
+        UPDATE tbl_comments
+        <set>
+            <if test="content != null and content.trim() != ''">
+                content = #{content},
+                last_modified_date = CURRENT_TIMESTAMP
+            </if>
+        </set>
+        WHERE comment_id = #{id}
+        AND member_id = #{writerId}
+        AND delete_yn = 0;
+    </update>
+    
+    <update id="deleteById">
+        UPDATE tbl_comments
+        SET delete_yn = 1
+        WHERE comment_id = #{id}
+          AND member_id = #{writerId}
+          AND delete_yn = 0;
+    </update>
+    
+    <delete id="permanentlyDeleteById">
+        DELETE
+        FROM tbl_comments
+        WHERE comment_id = #{id}
+          AND delete_yn = 1;
+    </delete>
+    
+    <update id="deleteAllByIds">
+        UPDATE tbl_comments
+        SET delete_yn = 1
+        WHERE comment_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        AND member_id = #{writerId}
+        AND delete_yn = 0;
+    </update>
+    
+    <delete id="permanentlyDeleteAllByIds">
+        DELETE
+        FROM tbl_comments
+        WHERE comment_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        AND delete_yn = 1;
+    </delete>
+
+</mapper>

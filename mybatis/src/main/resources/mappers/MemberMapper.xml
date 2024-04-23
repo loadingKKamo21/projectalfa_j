@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.project.alfa.repositories.mybatis.MemberMapper">
+    
+    <resultMap id="MemberResultMap" type="Member">
+        <id property="id" column="member_id"/>
+        <id property="username" column="username"/>
+        <id property="password" column="password"/>
+        <id property="nickname" column="nickname"/>
+        <id property="signature" column="signature"/>
+        <id property="createdDate" column="created_date"/>
+        <id property="lastModifiedDate" column="last_modified_date"/>
+        <id property="deleteYn" column="delete_yn"/>
+        <result property="role" column="role" typeHandler="com.project.alfa.entities.EnumTypeHandler"/>
+        <association property="authInfo" javaType="AuthInfo">
+            <result property="auth" column="auth"/>
+            <result property="authenticatedTime" column="authenticated_time"/>
+            <result property="emailAuthToken" column="email_auth_token"/>
+            <result property="emailAuthExpireTime" column="email_auth_expire_time"/>
+            <result property="oAuthProvider" column="o_auth_provider"/>
+            <result property="oAuthProviderId" column="o_auth_provider_id"/>
+        </association>
+        <collection property="postIds" ofType="java.lang.Long" column="post_id"/>
+        <collection property="commentIds" ofType="java.lang.Long" column="comment_id"/>
+    </resultMap>
+    
+    <insert id="save" useGeneratedKeys="true" keyColumn="member_id" keyProperty="id">
+        INSERT INTO tbl_members(username,
+                                password,
+                                email_auth_token,
+                                email_auth_expire_time,
+                                o_auth_provider,
+                                o_auth_provider_id,
+                                nickname,
+                                role)
+        VALUES (LOWER(#{username}),
+                #{password},
+                #{authInfo.emailAuthToken},
+                #{authInfo.emailAuthExpireTime},
+                #{authInfo.oAuthProvider},
+                #{authInfo.oAuthProviderId},
+                #{nickname},
+                #{role,typeHandler=com.project.alfa.entities.EnumTypeHandler});
+    </insert>
+    
+    <select id="findById" resultMap="MemberResultMap">
+        SELECT member.*, GROUP_CONCAT(post.post_id) AS postIds, GROUP_CONCAT(comment.comment_id) AS commentIds
+        FROM tbl_members AS member
+                 LEFT JOIN tbl_posts AS post ON (member.member_id = post.member_id)
+                 LEFT JOIN tbl_comments AS comment ON (member.member_id = comment.member_id)
+        WHERE member.member_id = #{id}
+        GROUP BY member.member_id;
+    </select>
+    
+    <select id="findByIdAndDeleteYn" resultMap="MemberResultMap">
+        SELECT member.*, GROUP_CONCAT(post.post_id) AS postIds, GROUP_CONCAT(comment.comment_id) AS commentIds
+        FROM tbl_members AS member
+                 LEFT JOIN tbl_posts AS post
+                           ON member.member_id = post.member_id AND post.delete_yn = #{deleteYn}
+                 LEFT JOIN tbl_comments AS comment
+                           ON member.member_id = comment.member_id AND comment.delete_yn = #{deleteYn}
+        WHERE member.member_id = #{id}
+          AND member.delete_yn = #{deleteYn}
+        GROUP BY member.member_id;
+    </select>
+    
+    <select id="findByUsername" resultMap="MemberResultMap">
+        SELECT member.*, GROUP_CONCAT(post.post_id) AS postIds, GROUP_CONCAT(comment.comment_id) AS commentIds
+        FROM tbl_members AS member
+                 LEFT JOIN tbl_posts AS post ON member.member_id = post.member_id
+                 LEFT JOIN tbl_comments AS comment ON member.member_id = comment.member_id
+        WHERE member.username = #{username}
+        GROUP BY member.member_id;
+    </select>
+    
+    <select id="findByUsernameAndDeleteYn" resultMap="MemberResultMap">
+        SELECT member.*, GROUP_CONCAT(post.post_id) AS postIds, GROUP_CONCAT(comment.comment_id) AS commentIds
+        FROM tbl_members AS member
+                 LEFT JOIN tbl_posts AS post
+                           ON member.member_id = post.member_id AND post.delete_yn = #{deleteYn}
+                 LEFT JOIN tbl_comments AS comment
+                           ON member.member_id = comment.member_id AND comment.delete_yn = #{deleteYn}
+        WHERE member.username = #{username}
+          AND member.delete_yn = #{deleteYn}
+        GROUP BY member.member_id;
+    </select>
+    
+    <select id="findAll" resultMap="MemberResultMap">
+        SELECT member.*, GROUP_CONCAT(post.post_id) AS postIds, GROUP_CONCAT(comment.comment_id) AS commentIds
+        FROM tbl_members AS member
+                 LEFT JOIN tbl_posts AS post ON member.member_id = post.member_id
+                 LEFT JOIN tbl_comments AS comment ON member.member_id = comment.member_id
+        GROUP BY member.member_id;
+    </select>
+    
+    <select id="findAllByAuth" resultMap="MemberResultMap">
+        SELECT member.*, GROUP_CONCAT(post.post_id) AS postIds, GROUP_CONCAT(comment.comment_id) AS commentIds
+        FROM tbl_members AS member
+                 LEFT JOIN tbl_posts AS post ON member.member_id = post.member_id
+                 LEFT JOIN tbl_comments AS comment ON member.member_id = comment.member_id
+        WHERE member.auth = #{auth}
+        GROUP BY member.member_id;
+    </select>
+    
+    <select id="findAllByDeleteYn" resultMap="MemberResultMap">
+        SELECT member.*, GROUP_CONCAT(post.post_id) AS postIds, GROUP_CONCAT(comment.comment_id) AS commentIds
+        FROM tbl_members AS member
+                 LEFT JOIN tbl_posts AS post
+                           ON member.member_id = post.member_id AND post.delete_yn = #{deleteYn}
+                 LEFT JOIN tbl_comments AS comment
+                           ON member.member_id = comment.member_id AND comment.delete_yn = #{deleteYn}
+        WHERE member.delete_yn = #{deleteYn}
+        GROUP BY member.member_id;
+    </select>
+    
+    <update id="update">
+        UPDATE tbl_members
+        <set>
+            <if test="password != null and password.trim() != ''">
+                password = #{password},
+            </if>
+            <if test="authInfo != null">
+                <if test="authInfo.emailAuthToken != null and authInfo.emailAuthToken.trim() != ''">
+                    auth = 0,
+                    email_auth_token = #{authInfo.emailAuthToken},
+                </if>
+                <if test="authInfo.emailAuthExpireTime != null">
+                    email_auth_expire_time = #{authInfo.emailAuthExpireTime},
+                </if>
+            </if>
+            <if test="nickname != null and nickname.trim() != ''">
+                nickname = #{nickname},
+            </if>
+            <if test="(signature != null and signature.trim() != '') or signature == null">
+                signature = #{signature},
+            </if>
+            <if test="role != null">
+                role = #{role,typeHandler=com.project.alfa.entities.EnumTypeHandler},
+            </if>
+            <if test="(password != null and password.trim() != '') or authInfo != null or (nickname != null and nickname.trim() != '') or ((signature != null and signature.trim() != '') or signature == null) or role != null">
+                last_modified_date = CURRENT_TIMESTAMP
+            </if>
+        </set>
+        WHERE member_id = #{id}
+        AND delete_yn = 0;
+    </update>
+    
+    <update id="authenticateEmail">
+        UPDATE tbl_members
+        SET auth               = 1,
+            authenticated_time = #{authenticatedTime}
+        WHERE username = #{username}
+          AND email_auth_token = #{emailAuthToken}
+          <![CDATA[
+          AND email_auth_expire_time >= #{authenticatedTime}
+          ]]>
+          AND delete_yn = 0;
+    </update>
+    
+    <update id="authenticateOAuth">
+        UPDATE tbl_members
+        SET auth               = 1,
+            authenticated_time = #{authenticatedTime}
+        WHERE username = #{username}
+          AND o_auth_provider = #{provider}
+          AND o_auth_provider_id = #{providerId}
+          AND delete_yn = 0;
+    </update>
+    
+    <select id="existsById" resultType="Boolean">
+        SELECT EXISTS(SELECT 1 FROM tbl_members WHERE member_id = #{id});
+    </select>
+    
+    <select id="existsByIdAndDeleteYn" resultType="Boolean">
+        SELECT EXISTS(SELECT 1 FROM tbl_members WHERE member_id = #{id} AND delete_yn = #{deleteYn});
+    </select>
+    
+    <select id="existsByUsername" resultType="Boolean">
+        SELECT EXISTS(SELECT 1 FROM tbl_members WHERE username = #{username});
+    </select>
+    
+    <select id="existsByUsernameAndDeleteYn" resultType="Boolean">
+        SELECT EXISTS(SELECT 1 FROM tbl_members WHERE username = #{username} AND delete_yn = #{deleteYn});
+    </select>
+    
+    <select id="existsByNickname" resultType="Boolean">
+        SELECT EXISTS(SELECT 1 FROM tbl_members WHERE nickname = #{nickname});
+    </select>
+    
+    <select id="existsByNicknameAndDeleteYn" resultType="Boolean">
+        SELECT EXISTS(SELECT 1 FROM tbl_members WHERE nickname = #{nickname} AND delete_yn = #{deleteYn});
+    </select>
+    
+    <update id="deleteById">
+        UPDATE tbl_members
+        SET delete_yn = 1
+        WHERE member_id = #{id}
+          AND delete_yn = 0;
+    </update>
+    
+    <update id="permanentlyDeleteById">
+        DELETE
+        FROM tbl_members
+        WHERE member_id = #{id}
+          AND delete_yn = 1;
+    </update>
+
+</mapper>

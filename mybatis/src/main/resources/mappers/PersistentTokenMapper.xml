@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.project.alfa.repositories.mybatis.PersistentTokenMapper">
+    
+    <insert id="createNewToken">
+        INSERT INTO tbl_persistent_logins(username, series, token, last_used)
+        VALUES (#{username}, #{series}, #{tokenValue}, #{date});
+    </insert>
+    
+    <update id="updateToken">
+        UPDATE tbl_persistent_logins
+        SET token     = #{tokenValue},
+            last_used = #{lastUsed}
+        WHERE series = #{series};
+    </update>
+    
+    <select id="getTokenForSeries"
+            resultType="org.springframework.security.web.authentication.rememberme.PersistentRememberMeToken">
+        SELECT username, series, token AS tokenValue, last_used AS date
+        FROM tbl_persistent_logins
+        WHERE series = #{series};
+    </select>
+    
+    <delete id="removeUserTokens">
+        DELETE
+        FROM tbl_persistent_logins
+        WHERE username = #{username};
+    </delete>
+
+</mapper>
