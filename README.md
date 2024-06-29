@@ -1,7 +1,7 @@
 # Project alfa
 
 ## 개요
-Java / Spring Boot 기반 CRUD 프로젝트
+Java / Spring Boot 기반 CRUD 프로젝트 \+ [Kotlin 버전](https://github.com/loadingKKamo21/projectalfa_k)
 
 ## 목차
 1. [개발 환경](#개발-환경)
@@ -25,7 +25,7 @@ Java / Spring Boot 기반 CRUD 프로젝트
 - Embedded Redis (for Test)
 
 #### Tool
-- IntelliJ IDEA, Gradle
+- IntelliJ IDEA, Gradle, smtp4dev
 
 ## 설계 목표
 - 스프링 부트를 활용한 CRUD API 애플리케이션
@@ -37,6 +37,8 @@ Java / Spring Boot 기반 CRUD 프로젝트
 	- MyBatis: Mapper 활용
 - 게시글/댓글 페이징, 게시글 검색 기능
 - 스프링 시큐리티 활용 계정 2타입 설계: 이메일 인증 계정, OAuth2 계정
+    - ~~HTTP Basic 인증~~(주석)
+    - JWT 인증
 - 파일 업로드/다운로드
 - 스프링 캐시 + Redis: 게시글 조회 수 증가 로직
 - Repository / Service / Controller JUnit5 테스트 코드 작성
@@ -53,8 +55,8 @@ Java / Spring Boot 기반 CRUD 프로젝트
 |   |       \---project
 |   |           \---alfa
 |   |               |   AlfaApplication.java
-|   |               |   InitDb.java	-> 더미 데이터 생성/저장
-|   |               +---aop	//로깅 AOP
+|   |               |   InitDb.java            -> 더미 데이터 생성/저장
+|   |               +---aop            //로깅 AOP
 |   |               |   |   Pointcuts.java
 |   |               |   |   ProjectAspects.java
 |   |               |   +---annotation
@@ -66,54 +68,64 @@ Java / Spring Boot 기반 CRUD 프로젝트
 |   |               |       \---logtrace
 |   |               |               LogTrace.java
 |   |               |               ThreadLocalLogTrace.java
-|   |               +---config	//설정
+|   |               +---config            //설정
 |   |               |       AopConfig.java
-|   |               |       CacheConfig.java	-> 캐시 설정
-|   |               |       ProjectConfig.java
-|   |               |       RedisConfig.java	-> Redis 설정
-|   |               |       SecurityConfig.java	-> 시큐리티 설정
+|   |               |       CacheConfig.java               -> 캐시 설정
+|   |               |       ProjectConfig.java             -> 빈 등록
+|   |               |       RedisConfig.java               -> Redis 설정
+|   |               |       SecurityConfig.java            -> 시큐리티 설정
 |   |               |       WebConfig.java
-|   |               +---controllers	//컨트롤러
+|   |               +---controllers            //컨트롤러
 |   |               |   |   MainController.java
 |   |               |   \---api
 |   |               |           AttachmentApiController.java
+|   |               |           AuthApiController.java
 |   |               |           CommentApiController.java
 |   |               |           MemberApiController.java
 |   |               |           PostApiController.java
-|   |               +---entities	//엔티티
-|   |               |       Attachment.java	-> 첨부파일(UploadFile 구현체)
-|   |               |       AuthInfo.java	-> 인증 정보(Member 필드)
-|   |               |       Comment.java	-> 댓글
-|   |               |       Member.java	-> 계정
-|   |               |       Post.java	-> 게시글
-|   |               |       Role.java	-> 계정 유형(enum)
-|   |               |       UploadFile.java	-> 업로드 파일(abstract)
-|   |               +---error	//에러 or 예외 관련
-|   |               |   |   ErrorResponse.java	->에러 정보 전달
+|   |               +---entities            //엔티티
+|   |               |       Attachment.java            -> 첨부파일(UploadFile 구현)
+|   |               |       AuthInfo.java              -> 인증 정보(Member 필드)
+|   |               |       Comment.java               -> 댓글
+|   |               |       Member.java                -> 계정
+|   |               |       Post.java                  -> 게시글
+|   |               |       Role.java                  -> 계정 유형(enum)
+|   |               |       UploadFile.java            -> 업로드 파일(abstract)
+|   |               +---error            //예외
+|   |               |   |   ErrorResponse.java            -> 에러 정보 전달
 |   |               |   |   GlobalExceptionHandler.java
 |   |               |   \---exception
 |   |               |           BusinessException.java
 |   |               |           EntityNotFoundException.java
-|   |               |           ErrorCode.java	->에러 코드
+|   |               |           ErrorCode.java            -> 에러 코드(enum)
 |   |               |           InvalidValueException.java
-|   |               +---interceptor	//인터셉터
+|   |               +---interceptor            //인터셉터
 |   |               |       LogInterceptor.java
-|   |               +---repositories	//리포지토리
+|   |               +---repositories            //리포지토리(DAO)
 |   |               |   +---dto
-|   |               |   |       SearchParam.java	-> 검색 파라미터
-|   |               +---security	//시큐리티
+|   |               |   |       SearchParam.java            -> 검색 파라미터 DTO
+|   |               +---security            //시큐리티
 |   |               |   |   CustomAuthenticationFailureHandler.java
 |   |               |   |   CustomAuthenticationProvider.java
-|   |               |   |   CustomUserDetails.java	-> UserDetails, OAuth2User 구현체
-|   |               |   |   CustomUserDetailsService.java	-> UserDetailsService 구현체
-|   |               |   \---oauth2
-|   |               |       |   CustomOAuth2UserService.java	-> OAuth2 인증 서비스
+|   |               |   |   CustomUserDetails.java                   -> UserDetails, OAuth2User 구현
+|   |               |   |   CustomUserDetailsService.java            -> UserDetailsService 구현
+|   |               |   +---jwt            //JWT 인증
+|   |               |   |   +---entrypoint
+|   |               |   |   |       JwtAuthenticationEntryPoint.java
+|   |               |   |   \---filter
+|   |               |   |       |   JwtAuthenticationFilter.java
+|   |               |   |       |   JwtRequestFilter.java
+|   |               |   |       \---dto
+|   |               |   |               LoginBody.java            -> JWT 로그인 DTO
+|   |               |   \---oauth2            //OAuth 2.0
+|   |               |       |   CustomOAuth2UserService.java            -> DefaultOAuth2UserService 구현
 |   |               |       \---provider
-|   |               |               GoogleUserInfo.java
-|   |               |               OAuth2UserInfo.java -> OAuth2 인증 정보 인터페이스
-|   |               +---services	//서비스
+|   |               |               GoogleUserInfo.java                 -> Google용 인증 정보(OAuth2UserInfo 구현)
+|   |               |               OAuth2UserInfo.java                 -> OAuth2 인증 정보(interface)
+|   |               +---services            //서비스
 |   |               |   |   AttachmentService.java
 |   |               |   |   CommentService.java
+|   |               |   |   JwtService.java
 |   |               |   |   MemberService.java
 |   |               |   |   PostService.java
 |   |               |   \---dto
@@ -125,13 +137,45 @@ Java / Spring Boot 기반 CRUD 프로젝트
 |   |               |           MemberUpdateRequestDto.java
 |   |               |           PostRequestDto.java
 |   |               |           PostResponseDto.java
-|   |               |           RegEx.java	-> 필드값 확인용 정규표현식 모음
-|   |               \---utils
-|   |                       EmailSender.java	-> 이메일 전송
-|   |                       FileUtil.java	-> 업로드 파일 관련
-|   |                       RandomGenerator.java	-> 랜덤 데이터 생성
+|   |               |           RegEx.java            -> 필드값 확인용 정규식 모음
+|   |               \---utils            //유틸
+|   |                       EmailSender.java                -> 이메일 전송 관련
+|   |                       FileUtil.java                   -> 업로드 파일 관련
+|   |                       RandomGenerator.java            -> 랜덤 데이터 생성(문자열, 숫자 등)
 |   \---resources
-|       |   application.yml
+|           application.yml
+\---test
+    \---java
+        \---com
+            \---project
+                \---alfa
+                    |   AlfaApplicationTests.java
+                    +---config            //테스트 설정
+                    |   |   DummyGenerator.java            -> 테스트용 더미 데이터 생성
+                    |   |   TestConfig.java
+                    |   +---redis
+                    |   |       EmbeddedRedisConfig.java            -> 테스트용 EmbeddedRedis 설정
+                    |   |       RandomPort.java
+                    |   \---security
+                    |           TestSecurityConfig.java            -> 테스트용 시큐리티 설정
+                    |           WithCustomMockUser.java            -> 테스트용 인증 객체(annotation)
+                    |           WithCustomSecurityContextFactory.java
+                    +---controllers
+                    |   |   MainControllerTest.java
+                    |   \---api
+                    |           AttachmentApiControllerTest.java
+                    |           AuthApiControllerTest.java
+                    |           CommentApiControllerTest.java
+                    |           MemberApiControllerTest.java
+                    |           PostApiControllerTest.java
+                    +---services
+                    |       AttachmentServiceTest.java
+                    |       CommentServiceTest.java
+                    |       JwtServiceTest.java
+                    |       MemberServiceTest.java
+                    |       PostServiceTest.java
+                    \---utils
+                            EmailSenderTest.java
 ```
 
 ###### [ JPA ]
@@ -143,14 +187,14 @@ Java / Spring Boot 기반 CRUD 프로젝트
 |   |           \---alfa
 |   |               +---entities
 |   |               |       BaseTimeEntity.java
-|   |               |       PersistentLogins.java	-> 시큐리티 remember-me
-|   |               +---repositories	//JPA Repository
-|   |               |   +---v1	//EntityManager 사용
+|   |               |       PersistentLogins.java            -> 시큐리티 remember-me
+|   |               +---repositories
+|   |               |   +---v1            //EntityManager 사용
 |   |               |   |       AttachmentRepositoryV1.java
 |   |               |   |       CommentRepositoryV1.java
 |   |               |   |       MemberRepositoryV1.java
 |   |               |   |       PostRepositoryV1.java
-|   |               |   +---v2	//JpaRepository + Specification 사용
+|   |               |   +---v2            //JpaRepository + Specification 사용
 |   |               |   |   |   AttachmentJpaRepository.java
 |   |               |   |   |   AttachmentRepositoryV2.java
 |   |               |   |   |   CommentJpaRepository.java
@@ -160,8 +204,8 @@ Java / Spring Boot 기반 CRUD 프로젝트
 |   |               |   |   |   PostJpaRepository.java
 |   |               |   |   |   PostRepositoryV2.java
 |   |               |   |   \---specification
-|   |               |   |           PostSpecification.java	//게시글 검색 및 페이징
-|   |               |   \---v3	//JpaRepository + Querydsl 사용
+|   |               |   |           PostSpecification.java
+|   |               |   \---v3            //JpaRepository + Querydsl 사용
 |   |               |       |   AttachmentRepositoryV3.java
 |   |               |       |   CommentRepositoryV3.java
 |   |               |       |   MemberRepositoryV3.java
@@ -175,6 +219,27 @@ Java / Spring Boot 기반 CRUD 프로젝트
 |   |               |               MemberRepositoryV3Impl.java
 |   |               |               PostRepositoryV3Custom.java
 |   |               |               PostRepositoryV3Impl.java
+\---test
+    \---java
+        \---com
+            \---project
+                \---alfa
+                    +---repositories
+                    |   +---v1
+                    |   |       AttachmentRepositoryV1Test.java
+                    |   |       CommentRepositoryV1Test.java
+                    |   |       MemberRepositoryV1Test.java
+                    |   |       PostRepositoryV1Test.java
+                    |   +---v2
+                    |   |       AttachmentRepositoryV2Test.java
+                    |   |       CommentRepositoryV2Test.java
+                    |   |       MemberRepositoryV2Test.java
+                    |   |       PostRepositoryV2Test.java
+                    |   \---v3
+                    |           AttachmentRepositoryV3Test.java
+                    |           CommentRepositoryV3Test.java
+                    |           MemberRepositoryV3Test.java
+                    |           PostRepositoryV3Test.java
 ```
 
 ###### [ MyBatis ]
@@ -185,30 +250,41 @@ Java / Spring Boot 기반 CRUD 프로젝트
 |   |       \---project
 |   |           \---alfa
 |   |               +---entities
-|   |               |       EnumTypeHandler.java	-> Java-MySQL 간 enum 타입 변환
+|   |               |       EnumTypeHandler.java            -> Java-MySQL 간 enum 타입 변환
 |   |               +---repositories
 |   |               |   |   AttachmentRepository.java
 |   |               |   |   CommentRepository.java
 |   |               |   |   MemberRepository.java
 |   |               |   |   PostRepository.java
-|   |               |   \---mybatis	//MyBatis Repository
+|   |               |   \---mybatis            //MyBatis DAO
 |   |               |           AttachmentMapper.java
 |   |               |           AttachmentRepositoryImpl.java
 |   |               |           CommentMapper.java
 |   |               |           CommentRepositoryImpl.java
 |   |               |           MemberMapper.java
 |   |               |           MemberRepositoryImpl.java
-|   |               |           MyBatisTokenRepositoryImpl.java
-|   |               |           PersistentTokenMapper.java
+|   |               |           MyBatisTokenRepositoryImpl.java            -> 시큐리티 remember-me
+|   |               |           PersistentTokenMapper.java                 -> 시큐리티 remember-me
 |   |               |           PostMapper.java
 |   |               |           PostRepositoryImpl.java
 |   \---resources
-|       +---mappers	//MyBatis Mapper.xml
-|       |       AttachmentMapper.xml
-|       |       CommentMapper.xml
-|       |       MemberMapper.xml
-|       |       PersistentTokenMapper.xml	-> 시큐리티 remember-me
-|       |       PostMapper.xml
+|       |   schema.sql
+|       \---mappers            //MyBatis Mapper
+|               AttachmentMapper.xml
+|               CommentMapper.xml
+|               MemberMapper.xml
+|               PersistentTokenMapper.xml
+|               PostMapper.xml
+\---test
+    \---java
+        \---com
+            \---project
+                \---alfa
+                    +---repositories
+                    |       AttachmentRepositoryTest.java
+                    |       CommentRepositoryTest.java
+                    |       MemberRepositoryTest.java
+                    |       PostRepositoryTest.java
 ```
 
 #### [ 코드 예시 ]
@@ -235,6 +311,11 @@ Java / Spring Boot 기반 CRUD 프로젝트
 - 스프링 시큐리티 연동 2가지 계정 가입 방식
 	- 아이디(이메일) + 이메일 인증
 	- OAuth2
+	- ~~HTTP Basic 인증~~(주석)
+	- JWT 인증
+	    - Access/RefreshToken 구분
+	    - 필터, 엔드포인트로 Request 토큰 검증
+	    - RefreshToken: Redis 서버 저장(로그아웃 시 삭제)
 - JPA 프로젝트 OSIV OFF 설정
 	- 서비스 레이어 외부로 엔티티 노출 억제
 	- 컨트롤러-서비스 전송 간 DTO 사용(MyBatis 프로젝트도 동일한 방식 적용)
@@ -267,16 +348,13 @@ Java / Spring Boot 기반 CRUD 프로젝트
 				max-active: 8
 	...
 	```
-	- SMTP: 이메일 전송 시 사용, 기본값 Google SMTP
+	- SMTP: 이메일 전송 시 사용, 기본값 smtp4dev, ~~Google SMTP~~
 	```
 	...
 	spring:
 		mail:
-			host: smtp.gmail.com
-			port: 587
-			username: { Google Username }
-			password: { Google Password }
-			properties:
+		    host: localhost
+		    port: 25
 				...
 	```
 	- OAuth2: 기본값 Google, 타 OAuth2 사용 시 OAuth2UserInfo 구현체 추가 설정 필요
