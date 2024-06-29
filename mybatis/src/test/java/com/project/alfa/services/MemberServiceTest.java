@@ -1,5 +1,8 @@
 package com.project.alfa.services;
 
+import com.icegreen.greenmail.configuration.GreenMailConfiguration;
+import com.icegreen.greenmail.junit5.GreenMailExtension;
+import com.icegreen.greenmail.util.ServerSetup;
 import com.project.alfa.config.DummyGenerator;
 import com.project.alfa.config.TestConfig;
 import com.project.alfa.entities.Member;
@@ -7,25 +10,25 @@ import com.project.alfa.entities.Role;
 import com.project.alfa.error.exception.EntityNotFoundException;
 import com.project.alfa.error.exception.ErrorCode;
 import com.project.alfa.error.exception.InvalidValueException;
-import com.project.alfa.repositories.MemberRepository;
 import com.project.alfa.repositories.mybatis.MemberMapper;
 import com.project.alfa.services.dto.MemberInfoResponseDto;
 import com.project.alfa.services.dto.MemberJoinRequestDto;
 import com.project.alfa.services.dto.MemberUpdateRequestDto;
-import com.project.alfa.utils.EmailSender;
 import lombok.SneakyThrows;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.mail.Message;
+import javax.mail.MessagingException;
+import javax.mail.internet.MimeMessage;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Random;
@@ -33,7 +36,6 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.*;
 
 @Import(TestConfig.class)
 @SpringBootTest
@@ -42,25 +44,21 @@ import static org.mockito.Mockito.*;
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class MemberServiceTest {
     
-    MemberService memberService;
-    @Autowired
-    MemberRepository memberRepository;
-    @Autowired
-    PasswordEncoder  passwordEncoder;
-    @MockBean
-    EmailSender      emailSender;
-    @Autowired
-    MemberMapper     memberMapper;
-    @Autowired
-    DummyGenerator   dummy;
+    @RegisterExtension
+    static GreenMailExtension greenMailExtension = new GreenMailExtension(new ServerSetup(3025, null, "smtp"))
+            .withConfiguration(GreenMailConfiguration.aConfig().withUser("springboot", "secret"))
+            .withPerMethodLifecycle(true);
     
-    @BeforeEach
-    void setup() {
-        memberService = new MemberService(memberRepository, passwordEncoder, emailSender);
-        
-        doNothing().when(emailSender).send(anyString(), anyString(), anyString());
-    }
+    @Autowired
+    MemberService   memberService;
+    @Autowired
+    PasswordEncoder passwordEncoder;
+    @Autowired
+    MemberMapper    memberMapper;
+    @Autowired
+    DummyGenerator  dummy;
     
+    @SneakyThrows(MessagingException.class)
     @Test
     @DisplayName("회원 가입")
     void join() {
@@ -71,14 +69,18 @@ class MemberServiceTest {
         Long id = memberService.join(dto);
         
         //Then
-        Member findMember = memberMapper.findById(id);
+        greenMailExtension.waitForIncomingEmail(5000, 1);
+        Member        findMember       = memberMapper.findById(id);
+        MimeMessage[] receivedMessages = greenMailExtension.getReceivedMessages();
         
         assertThat(dto.getUsername().toLowerCase()).isEqualTo(findMember.getUsername());
         assertThat(passwordEncoder.matches(dto.getPassword(), findMember.getPassword())).isTrue();
         assertThat(dto.getNickname()).isEqualTo(findMember.getNickname());
         assertThat(findMember.getRole()).isEqualTo(Role.USER);
         
-        verify(emailSender, times(1)).send(anyString(), anyString(), anyString());
+        assertThat(receivedMessages).hasSize(1);
+        assertThat(findMember.getUsername())
+                .isEqualTo(receivedMessages[0].getRecipients(Message.RecipientType.TO)[0].toString());
     }
     
     @Test
@@ -194,11 +196,9 @@ class MemberServiceTest {
                 .isEqualTo(member.getAuthInfo().getEmailAuthToken());
         assertThat(findMember.getAuthInfo().getEmailAuthExpireTime())
                 .isEqualTo(member.getAuthInfo().getEmailAuthExpireTime());
-        
-        verify(emailSender, never()).send(anyString(), anyString(), anyString());
     }
     
-    @SneakyThrows(InterruptedException.class)
+    @SneakyThrows({InterruptedException.class, MessagingException.class})
     @Test
     @DisplayName("이메일 인증, 잘못된 토큰")
     void verifyEmailAuth_wrongAuthToken() {
@@ -218,7 +218,9 @@ class MemberServiceTest {
         memberService.verifyEmailAuth(member.getUsername(), otherAuthToken, LocalDateTime.now());
         
         //Then
-        Member findMember = memberMapper.findById(id);
+        greenMailExtension.waitForIncomingEmail(5000, 1);
+        Member        findMember       = memberMapper.findById(id);
+        MimeMessage[] receivedMessages = greenMailExtension.getReceivedMessages();
         
         //잘못된 토큰으로 인증을 시도한 경우 새로운 토큰 및 만료 제한 시간으로 인증 메일이 재전송됨
         assertThat(findMember.getAuthInfo().isAuth()).isFalse();
@@ -226,10 +228,12 @@ class MemberServiceTest {
         assertThat(findMember.getAuthInfo().getEmailAuthExpireTime())
                 .isNotEqualTo(member.getAuthInfo().getEmailAuthExpireTime());
         
-        verify(emailSender, times(1)).send(anyString(), anyString(), anyString());
+        assertThat(receivedMessages).hasSize(1);
+        assertThat(findMember.getUsername())
+                .isEqualTo(receivedMessages[0].getRecipients(Message.RecipientType.TO)[0].toString());
     }
     
-    @SneakyThrows(InterruptedException.class)
+    @SneakyThrows({InterruptedException.class, MessagingException.class})
     @Test
     @DisplayName("이메일 인증, 만료 제한 시간 초과")
     void verifyEmailAuth_timeout() {
@@ -246,16 +250,21 @@ class MemberServiceTest {
                                       expireTime.plusSeconds(1));
         
         //Then
-        Member findMember = memberMapper.findById(id);
+        greenMailExtension.waitForIncomingEmail(5000, 1);
+        Member        findMember       = memberMapper.findById(id);
+        MimeMessage[] receivedMessages = greenMailExtension.getReceivedMessages();
         
         //인증 만료 제한 시간 초과 후 시도한 경우 새로운 토큰 및 만료 제한 시간으로 인증 메일이 재전송됨
         assertThat(findMember.getAuthInfo().isAuth()).isFalse();
         assertThat(findMember.getAuthInfo().getEmailAuthToken()).isNotEqualTo(member.getAuthInfo().getEmailAuthToken());
         assertThat(findMember.getAuthInfo().getEmailAuthExpireTime()).isNotEqualTo(expireTime);
         
-        verify(emailSender, times(1)).send(anyString(), anyString(), anyString());
+        assertThat(receivedMessages).hasSize(1);
+        assertThat(findMember.getUsername())
+                .isEqualTo(receivedMessages[0].getRecipients(Message.RecipientType.TO)[0].toString());
     }
     
+    @SneakyThrows(MessagingException.class)
     @Test
     @DisplayName("비밀번호 찾기")
     void findPassword() {
@@ -270,16 +279,20 @@ class MemberServiceTest {
         memberService.findPassword(member.getUsername());
         
         //Then
-        Member findMember = memberMapper.findById(id);
+        greenMailExtension.waitForIncomingEmail(5000, 1);
+        Member        findMember       = memberMapper.findById(id);
+        MimeMessage[] receivedMessages = greenMailExtension.getReceivedMessages();
         
         //비밀번호 찾기를 시도하면 20자리 임시 비밀번호로 변경되고, 메일로 전송됨
         assertThat(findMember.getPassword()).isNotEqualTo(passwordEncoder.encode(member.getPassword()));
         assertThat(passwordEncoder.matches("Password1!@", findMember.getPassword())).isFalse();
         
-        verify(emailSender, times(1)).send(anyString(), anyString(), anyString());
+        assertThat(receivedMessages).hasSize(1);
+        assertThat(findMember.getUsername())
+                .isEqualTo(receivedMessages[0].getRecipients(Message.RecipientType.TO)[0].toString());
     }
     
-    @SneakyThrows(InterruptedException.class)
+    @SneakyThrows({InterruptedException.class, MessagingException.class})
     @Test
     @DisplayName("비밀번호 찾기, 미인증 상태")
     void findPassword_unauth() {
@@ -296,7 +309,9 @@ class MemberServiceTest {
                 .hasFieldOrPropertyWithValue("errorCode", ErrorCode.AUTH_NOT_COMPLETED)
                 .hasMessage("Email is not verified.");
         
-        Member findMember = memberMapper.findById(id);
+        greenMailExtension.waitForIncomingEmail(5000, 1);
+        Member        findMember       = memberMapper.findById(id);
+        MimeMessage[] receivedMessages = greenMailExtension.getReceivedMessages();
         
         //인증되지 않은 계정에 비밀번호 찾기를 시도하면 임시 비밀번호는 발급되지 않고 인증 메일이 전송됨
         assertThat(findMember.getAuthInfo().isAuth()).isFalse();
@@ -305,7 +320,9 @@ class MemberServiceTest {
                 .isNotEqualTo(member.getAuthInfo().getEmailAuthExpireTime());
         assertThat(passwordEncoder.matches("Password1!@", findMember.getPassword())).isTrue();  //임시 비밀번호로 변경되지 않음
         
-        verify(emailSender, times(1)).send(anyString(), anyString(), anyString());
+        assertThat(receivedMessages).hasSize(1);
+        assertThat(findMember.getUsername())
+                .isEqualTo(receivedMessages[0].getRecipients(Message.RecipientType.TO)[0].toString());
     }
     
     @Test
@@ -407,7 +424,7 @@ class MemberServiceTest {
         assertThat(beforeMember.getSignature()).isNotEqualTo(dto.getSignature());
     }
     
-    @SneakyThrows(InterruptedException.class)
+    @SneakyThrows({InterruptedException.class, MessagingException.class})
     @Test
     @DisplayName("정보 수정, 미인증 상태")
     void update_unauth() {
@@ -428,7 +445,9 @@ class MemberServiceTest {
                 .hasFieldOrPropertyWithValue("errorCode", ErrorCode.AUTH_NOT_COMPLETED)
                 .hasMessage("Email is not verified.");
         
-        Member afterMember = memberMapper.findById(id);
+        greenMailExtension.waitForIncomingEmail(5000, 1);
+        Member        afterMember      = memberMapper.findById(id);
+        MimeMessage[] receivedMessages = greenMailExtension.getReceivedMessages();
         
         //인증되지 않은 계정에 정보 수정을 시도하면 정보는 수정되지 않고 인증 메일이 전송됨
         assertThat(afterMember.getAuthInfo().isAuth()).isFalse();
@@ -444,7 +463,9 @@ class MemberServiceTest {
         assertThat(afterMember.getSignature()).isNotEqualTo(dto.getSignature());
         assertThat(beforeMember.getSignature()).isEqualTo(afterMember.getSignature());
         
-        verify(emailSender, times(1)).send(anyString(), anyString(), anyString());
+        assertThat(receivedMessages).hasSize(1);
+        assertThat(afterMember.getUsername())
+                .isEqualTo(receivedMessages[0].getRecipients(Message.RecipientType.TO)[0].toString());
     }
     
     @Test
