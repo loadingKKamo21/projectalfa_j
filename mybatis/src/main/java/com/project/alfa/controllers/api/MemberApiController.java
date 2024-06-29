@@ -1,6 +1,5 @@
 package com.project.alfa.controllers.api;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.gson.Gson;
 import com.project.alfa.error.ErrorResponse;
 import com.project.alfa.error.exception.ErrorCode;
@@ -59,7 +58,7 @@ public class MemberApiController {
      * @return
      */
     @PostMapping("/forgot-password")
-    public ResponseEntity<String> forgotPassword(@RequestBody final String username) throws JsonProcessingException {
+    public ResponseEntity<String> forgotPassword(@RequestBody final String username) {
         //입력된 아이디(이메일) 검사
         if (!username.matches("^[a-zA-Z0-9_!#$%&'*+/=?`{|}~^.-]+@[a-zA-Z0-9.-]+$"))
             return new ResponseEntity<>(

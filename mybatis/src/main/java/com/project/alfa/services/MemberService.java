@@ -18,7 +18,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.UUID;
 
 @Service
@@ -58,8 +57,7 @@ public class MemberService {
                               .password(passwordEncoder.encode(dto.getPassword()))
                               .authInfo(AuthInfo.builder()
                                                 .emailAuthToken(UUID.randomUUID().toString())
-                                                .emailAuthExpireTime(
-                                                        LocalDateTime.now().withNano(0).plusMinutes(MAX_EXPIRE_TIME))
+                                                .emailAuthExpireTime(LocalDateTime.now().withNano(0).plusMinutes(MAX_EXPIRE_TIME))
                                                 .build())
                               .nickname(dto.getNickname())
                               .role(Role.USER)
@@ -68,9 +66,9 @@ public class MemberService {
         memberRepository.save(member);
         
         //가입 인증 메일 전송
-        sendAuthEmail(member.getUsername(),
-                      member.getAuthInfo().getEmailAuthToken(),
-                      member.getAuthInfo().getEmailAuthExpireTime());
+        emailSender.sendVerificationEmail(member.getUsername(),
+                                          member.getAuthInfo().getEmailAuthToken(),
+                                          member.getAuthInfo().getEmailAuthExpireTime());
         
         return member.getId();
     }
@@ -85,8 +83,7 @@ public class MemberService {
     @Transactional
     public void verifyEmailAuth(final String username, final String authToken, final LocalDateTime authTime) {
         Member member = memberRepository.findByUsername(username.toLowerCase(), false)
-                                        .orElseThrow(() -> new EntityNotFoundException(
-                                                "Could not found 'Member' by username: " + username));
+                                        .orElseThrow(() -> new EntityNotFoundException("Could not found 'Member' by username: " + username));
         
         //이미 인증된 계정인 경우
         if (member.getAuthInfo().isAuth())
@@ -110,8 +107,7 @@ public class MemberService {
     @Transactional
     public void resendVerifyEmail(final String username) {
         Member member = memberRepository.findByUsername(username.toLowerCase(), false)
-                                        .orElseThrow(() -> new EntityNotFoundException(
-                                                "Could not found 'Member' by username: " + username));
+                                        .orElseThrow(() -> new EntityNotFoundException("Could not found 'Member' by username: " + username));
         
         String        authToken  = UUID.randomUUID().toString();    //새로운 인증 토큰
         LocalDateTime expireTime = LocalDateTime.now().withNano(0).plusMinutes(MAX_EXPIRE_TIME);    //새로운 인증 만료 제한 시간
@@ -127,7 +123,7 @@ public class MemberService {
         memberRepository.update(param);
         
         //인증 메일 재전송
-        sendAuthEmail(username, authToken, expireTime);
+        emailSender.sendVerificationEmail(username, authToken, expireTime);
     }
     
     /**
@@ -138,8 +134,7 @@ public class MemberService {
     @Transactional
     public void findPassword(final String username) {
         Member member = memberRepository.findByUsername(username.toLowerCase(), false)
-                                        .orElseThrow(() -> new EntityNotFoundException(
-                                                "Could not found 'Member' by username: " + username));
+                                        .orElseThrow(() -> new EntityNotFoundException("Could not found 'Member' by username: " + username));
         
         //이메일 인증 여부 확인
         isVerifiedEmail(member.getUsername(), member.getAuthInfo().isAuth());
@@ -152,7 +147,7 @@ public class MemberService {
                                       .build());
         
         //비밀번호 찾기 결과 메일 전송
-        sendFindPasswordEmail(member.getUsername(), tempPassword);
+        emailSender.sendPasswordResetEmail(member.getUsername(), tempPassword);
     }
     
     /**
@@ -163,8 +158,7 @@ public class MemberService {
      */
     public MemberInfoResponseDto findById(final Long id) {
         return new MemberInfoResponseDto(memberRepository.findById(id, false)
-                                                         .orElseThrow(() -> new EntityNotFoundException(
-                                                                 "Could not found 'Member' by id: " + id)));
+                                                         .orElseThrow(() -> new EntityNotFoundException("Could not found 'Member' by id: " + id)));
     }
     
     /**
@@ -175,8 +169,7 @@ public class MemberService {
      */
     public MemberInfoResponseDto findByUsername(final String username) {
         return new MemberInfoResponseDto(memberRepository.findByUsername(username.toLowerCase(), false)
-                                                         .orElseThrow(() -> new EntityNotFoundException(
-                                                                 "Could not found 'Member' by username: " + username)));
+                                                         .orElseThrow(() -> new EntityNotFoundException("Could not found 'Member' by username: " + username)));
     }
     
     /**
@@ -187,8 +180,7 @@ public class MemberService {
     @Transactional
     public void update(final MemberUpdateRequestDto dto) {
         Member member = memberRepository.findById(dto.getId(), false)
-                                        .orElseThrow(() -> new EntityNotFoundException(
-                                                "Could not found 'Member' by id: " + dto.getId()));
+                                        .orElseThrow(() -> new EntityNotFoundException("Could not found 'Member' by id: " + dto.getId()));
         boolean flag = false;
         
         //이메일 인증 여부 확인
@@ -250,8 +242,7 @@ public class MemberService {
     @Transactional
     public void delete(final Long id, final String password) {
         Member member = memberRepository.findById(id, false)
-                                        .orElseThrow(() -> new EntityNotFoundException(
-                                                "Could not found 'Member' by id: " + id));
+                                        .orElseThrow(() -> new EntityNotFoundException("Could not found 'Member' by id: " + id));
         
         //비밀번호 확인
         if (!passwordEncoder.matches(password, member.getPassword()))
@@ -297,40 +288,6 @@ public class MemberService {
             throw new InvalidValueException("Email is not verified.", ErrorCode.AUTH_NOT_COMPLETED);
         }
         return;
-    }
-    
-    //==================== 이메일 전송 메서드 ====================//
-    
-    /**
-     * 인증 메일 전송
-     *
-     * @param email      - 메일 주소
-     * @param authToken  - 인증 토큰
-     * @param expireTime - 인증 만료 제한 시간
-     */
-    private void sendAuthEmail(final String email, final String authToken, final LocalDateTime expireTime) {
-        String subject = "이메일 인증";
-        String content = "계정 인증을 완료하기 위해 제한 시간 내 다음 링크를 클릭해주세요.\n" +
-                         "인증 만료 제한 시간: " + expireTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm:ss")) +
-                         "\n" +
-                         "http://localhost:8080/verify-email?email=" + email + "&authToken=" + authToken;
-        
-        emailSender.send(email, subject, content);
-    }
-    
-    /**
-     * 비밀번호 찾기 결과 메일 전송
-     *
-     * @param email        - 메일 주소
-     * @param tempPassword - 임시 비밀번호
-     */
-    private void sendFindPasswordEmail(final String email, final String tempPassword) {
-        String subject = "비밀번호 찾기 결과";
-        String content = "입력하신 정보로 찾은 계정의 임시 비밀번호는 다음과 같습니다.\n" +
-                         "임시 비밀번호: " + tempPassword + "\n" +
-                         "임시 비밀번호로 로그인한 다음 비밀번호를 변경해주세요.";
-        
-        emailSender.send(email, subject, content);
     }
     
 }

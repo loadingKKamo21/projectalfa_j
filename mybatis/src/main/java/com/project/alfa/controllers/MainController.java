@@ -29,8 +29,12 @@ public class MainController {
     public ResponseEntity<String> verifyEmail(@RequestParam String email,
                                               @RequestParam String authToken,
                                               HttpServletRequest request) {
-        LocalDateTime requestTime = LocalDateTime.parse(request.getHeader("Date"),
-                                                        DateTimeFormatter.RFC_1123_DATE_TIME);
+        String        header      = request.getHeader("Date");
+        LocalDateTime requestTime = null;
+        if (header == null)
+            requestTime = LocalDateTime.now();
+        else
+            requestTime = LocalDateTime.parse(header, DateTimeFormatter.RFC_1123_DATE_TIME);
         memberService.verifyEmailAuth(email, authToken, requestTime);
         return ResponseEntity.ok("Email verified successfully.");
     }
