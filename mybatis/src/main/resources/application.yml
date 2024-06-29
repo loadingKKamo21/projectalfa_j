@@ -10,6 +10,8 @@ server:
     path: /error
 
 spring:
+  application:
+    name: alfa
   devtools:
     livereload:
       enabled: true
@@ -56,20 +58,23 @@ spring:
               - email
               - profile
   mail:
-    host: smtp.gmail.com
-    port: 587
-    username: { Google Username }
-    password: { Google Password }
-    properties:
-      mail:
-        smtp:
-          starttls:
-            enable: true
-            required: true
-          auth: true
-          connectiontimeout: 5000
-          timeout: 5000
-          writetimeout: 5000
+    host: localhost
+    port: 25
+#  mail:
+#    host: smtp.gmail.com
+#    port: 587
+#    username: { Google Username }
+#    password: { Google Password }
+#    properties:
+#      mail:
+#        smtp:
+#          starttls:
+#            enable: true
+#            required: true
+#          auth: true
+#          connectiontimeout: 5000
+#          timeout: 5000
+#          writetimeout: 5000
 
 mybatis:
   configuration:
@@ -79,6 +84,7 @@ mybatis:
   mapper-locations: classpath:/mappers/**/*Mapper.xml
   type-aliases-package: com.project.alfa.entities
 
+#MyBatis PageHelper configuration
 pagehelper:
   helper-dialect: MySQL
   reasonable: true
@@ -87,9 +93,25 @@ logging:
   level:
     com.project.alfa.repositories.mybatis: trace
 
+#General configuration
+app:
+  frontend:
+    url: http://alfa.com
 file:
   upload:
     location: { File Upload Location }
+
+#JWT configuration
+jwt:
+  secret: SecureSecretKey
+  issuer: alfaIssuer
+  token:
+    access-expiration: 1800
+    refresh-expiration: 604800
+
+#Email configuration
+email:
+  from: no-reply@alfa.com
 
 ---
 
@@ -102,3 +124,7 @@ spring:
   sql:
     init:
       mode: always
+  mail:
+    port: 3025
+    username: springboot
+    password: secret

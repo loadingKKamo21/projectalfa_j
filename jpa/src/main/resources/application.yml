@@ -10,6 +10,8 @@ server:
     path: /error
 
 spring:
+  application:
+    name: alfa
   devtools:
     livereload:
       enabled: true
@@ -69,26 +71,30 @@ spring:
               - email
               - profile
   mail:
-    host: smtp.gmail.com
-    port: 587
-    username: { Google Username }
-    password: { Google Password }
-    properties:
-      mail:
-        smtp:
-          starttls:
-            enable: true
-            required: true
-          auth: true
-          connectiontimeout: 5000
-          timeout: 5000
-          writetimeout: 5000
+    host: localhost
+    port: 25
+#  mail:
+#    host: smtp.gmail.com
+#    port: 587
+#    username: { Google Username }
+#    password: { Google Password }
+#    properties:
+#      mail:
+#        smtp:
+#          starttls:
+#            enable: true
+#            required: true
+#          auth: true
+#          connectiontimeout: 5000
+#          timeout: 5000
+#          writetimeout: 5000
 
 logging:
   level:
     org.hibernate.sql: debug
     org.hibernate.type: trace
 
+#Spring Boot DataSource Decorator configuration
 decorator:
   datasource:
     p6spy:
@@ -96,9 +102,25 @@ decorator:
       enable-logging: true
       multiline: true
 
+#General configuration
+app:
+  frontend:
+    url: http://alfa.com
 file:
   upload:
     location: { File Upload Location }
+
+#JWT configuration
+jwt:
+  secret: SecureSecretKey
+  issuer: alfaIssuer
+  token:
+    access-expiration: 1800
+    refresh-expiration: 604800
+
+#Email configuration
+email:
+  from: no-reply@alfa.com
 
 ---
 
@@ -111,3 +133,7 @@ spring:
   jpa:
     hibernate:
       ddl-auto: create-drop
+  mail:
+    port: 3025
+    username: springboot
+    password: secret
