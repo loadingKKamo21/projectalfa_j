@@ -4,17 +4,21 @@
     
     <resultMap id="PostResultMap" type="Post">
         <id property="id" column="post_id"/>
-        <id property="writerId" column="member_id"/>
-        <id property="nickname" column="nickname"/>
-        <id property="title" column="title"/>
-        <id property="content" column="content"/>
-        <id property="viewCount" column="view_count"/>
-        <id property="noticeYn" column="notice_yn"/>
-        <id property="createdDate" column="created_date"/>
-        <id property="lastModifiedDate" column="last_modified_date"/>
-        <id property="deleteYn" column="delete_yn"/>
-        <collection property="commentIds" ofType="java.lang.Long" column="comment_id"/>
-        <collection property="attachmentIds" ofType="java.lang.Long" column="post_attachment_id"/>
+        <result property="writerId" column="member_id"/>
+        <result property="nickname" column="nickname"/>
+        <result property="title" column="title"/>
+        <result property="content" column="content"/>
+        <result property="viewCount" column="view_count"/>
+        <result property="noticeYn" column="notice_yn"/>
+        <result property="createdDate" column="created_date"/>
+        <result property="lastModifiedDate" column="last_modified_date"/>
+        <result property="deleteYn" column="delete_yn"/>
+        <collection property="commentIds" ofType="java.lang.Long">
+            <id column="comment_id"/>
+        </collection>
+        <collection property="attachmentIds" ofType="java.lang.Long">
+            <id column="post_attachment_id"/>
+        </collection>
     </resultMap>
     
     <insert id="save" useGeneratedKeys="true" keyColumn="post_id" keyProperty="id">
@@ -24,9 +28,9 @@
     
     <select id="findById" resultMap="PostResultMap">
         SELECT post.*,
-               member.nickname                             AS nickname,
-               GROUP_CONCAT(comment.comment_id)            AS commentIds,
-               GROUP_CONCAT(attachment.post_attachment_id) AS attachmentIds
+               member.nickname,
+               comment.comment_id,
+               attachment.post_attachment_id
         FROM tbl_posts AS post
                  JOIN tbl_members AS member ON post.member_id = member.member_id
                  LEFT JOIN tbl_comments AS comment ON post.post_id = comment.post_id
@@ -37,9 +41,9 @@
     
     <select id="findByIdAndDeleteYn" resultMap="PostResultMap">
         SELECT post.*,
-               member.nickname                             AS nickname,
-               GROUP_CONCAT(comment.comment_id)            AS commentIds,
-               GROUP_CONCAT(attachment.post_attachment_id) AS attachmentIds
+               member.nickname,
+               comment.comment_id,
+               attachment.post_attachment_id
         FROM tbl_posts AS post
                  JOIN tbl_members AS member ON post.member_id = member.member_id AND member.delete_yn = #{deleteYn}
                  LEFT JOIN tbl_comments AS comment ON post.post_id = comment.post_id AND comment.delete_yn = #{deleteYn}
@@ -52,9 +56,9 @@
     
     <select id="findAll" resultMap="PostResultMap">
         SELECT post.*,
-               member.nickname                             AS nickname,
-               GROUP_CONCAT(comment.comment_id)            AS commentIds,
-               GROUP_CONCAT(attachment.post_attachment_id) AS attachmentIds
+               member.nickname,
+               comment.comment_id,
+               attachment.post_attachment_id
         FROM tbl_posts AS post
                  JOIN tbl_members AS member ON post.member_id = member.member_id
                  LEFT JOIN tbl_comments AS comment ON post.post_id = comment.post_id
@@ -64,9 +68,9 @@
     
     <select id="findAllByDeleteYn" resultMap="PostResultMap">
         SELECT post.*,
-               member.nickname                             AS nickname,
-               GROUP_CONCAT(comment.comment_id)            AS commentIds,
-               GROUP_CONCAT(attachment.post_attachment_id) AS attachmentIds
+               member.nickname,
+               comment.comment_id,
+               attachment.post_attachment_id
         FROM tbl_posts AS post
                  JOIN tbl_members AS member ON post.member_id = member.member_id AND member.delete_yn = #{deleteYn}
                  LEFT JOIN tbl_comments AS comment ON post.post_id = comment.post_id AND comment.delete_yn = #{deleteYn}
@@ -77,8 +81,10 @@
     </select>
     
     <select id="findAllByIds" resultMap="PostResultMap">
-        SELECT post.*, member.nickname AS nickname, GROUP_CONCAT(comment.comment_id) AS commentIds,
-        GROUP_CONCAT(attachment.post_attachment_id) AS attachmentIds
+        SELECT post.*,
+        member.nickname,
+        comment.comment_id,
+        attachment.post_attachment_id
         FROM tbl_posts AS post
         JOIN tbl_members AS member ON post.member_id = member.member_id
         LEFT JOIN tbl_comments AS comment ON post.post_id = comment.post_id
@@ -91,8 +97,10 @@
     </select>
     
     <select id="findAllByIdsAndDeleteYn" resultMap="PostResultMap">
-        SELECT post.*, member.nickname AS nickname, GROUP_CONCAT(comment.comment_id) AS commentIds,
-        GROUP_CONCAT(attachment.post_attachment_id) AS attachmentIds
+        SELECT post.*,
+        member.nickname,
+        comment.comment_id,
+        attachment.post_attachment_id
         FROM tbl_posts AS post
         JOIN tbl_members AS member ON post.member_id = member.member_id AND member.delete_yn = #{deleteYn}
         LEFT JOIN tbl_comments AS comment ON post.post_id = comment.post_id AND comment.delete_yn = #{deleteYn}
@@ -108,9 +116,9 @@
     
     <select id="findAllByWriter" resultMap="PostResultMap">
         SELECT post.*,
-               member.nickname                             AS nickname,
-               GROUP_CONCAT(comment.comment_id)            AS commentIds,
-               GROUP_CONCAT(attachment.post_attachment_id) AS attachmentIds
+               member.nickname,
+               comment.comment_id,
+               attachment.post_attachment_id
         FROM tbl_posts AS post
                  JOIN tbl_members AS member ON post.member_id = member.member_id
                  LEFT JOIN tbl_comments AS comment ON post.post_id = comment.post_id
@@ -121,9 +129,9 @@
     
     <select id="findAllByWriterAndDeleteYn" resultMap="PostResultMap">
         SELECT post.*,
-               member.nickname                             AS nickname,
-               GROUP_CONCAT(comment.comment_id)            AS commentIds,
-               GROUP_CONCAT(attachment.post_attachment_id) AS attachmentIds
+               member.nickname,
+               comment.comment_id,
+               attachment.post_attachment_id
         FROM tbl_posts AS post
                  JOIN tbl_members AS member ON post.member_id = member.member_id AND member.delete_yn = #{deleteYn}
                  LEFT JOIN tbl_comments AS comment ON post.post_id = comment.post_id AND comment.delete_yn = #{deleteYn}
@@ -135,8 +143,10 @@
     </select>
     
     <select id="findAllBySearchParam" resultMap="PostResultMap">
-        SELECT post.*, member.nickname AS nickname, GROUP_CONCAT(comment.comment_id) AS commentIds,
-        GROUP_CONCAT(attachment.post_attachment_id) AS attachmentIds
+        SELECT post.*,
+        member.nickname,
+        comment.comment_id,
+        attachment.post_attachment_id
         FROM tbl_posts AS post
         JOIN tbl_members AS member ON post.member_id = member.member_id
         LEFT JOIN tbl_comments AS comment ON post.post_id = comment.post_id
@@ -165,8 +175,10 @@
     </select>
     
     <select id="findAllBySearchParamAndDeleteYn" resultMap="PostResultMap">
-        SELECT post.*, member.nickname AS nickname, GROUP_CONCAT(comment.comment_id) AS commentIds,
-        GROUP_CONCAT(attachment.post_attachment_id) AS attachmentIds
+        SELECT post.*,
+        member.nickname,
+        comment.comment_id,
+        attachment.post_attachment_id
         FROM tbl_posts AS post
         JOIN tbl_members AS member ON post.member_id = member.member_id AND member.delete_yn = #{deleteYn}
         LEFT JOIN tbl_comments AS comment ON post.post_id = comment.post_id AND comment.delete_yn = #{deleteYn}

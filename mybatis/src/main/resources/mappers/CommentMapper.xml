@@ -4,13 +4,13 @@
     
     <resultMap id="CommentResultMap" type="Comment">
         <id property="id" column="comment_id"/>
-        <id property="writerId" column="member_id"/>
-        <id property="nickname" column="nickname"/>
-        <id property="postId" column="post_id"/>
-        <id property="content" column="content"/>
-        <id property="createdDate" column="created_date"/>
-        <id property="lastModifiedDate" column="last_modified_date"/>
-        <id property="deleteYn" column="delete_yn"/>
+        <result property="writerId" column="member_id"/>
+        <result property="nickname" column="nickname"/>
+        <result property="postId" column="post_id"/>
+        <result property="content" column="content"/>
+        <result property="createdDate" column="created_date"/>
+        <result property="lastModifiedDate" column="last_modified_date"/>
+        <result property="deleteYn" column="delete_yn"/>
     </resultMap>
     
     <insert id="save" useGeneratedKeys="true" keyColumn="comment_id" keyProperty="id">

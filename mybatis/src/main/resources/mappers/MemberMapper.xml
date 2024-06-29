@@ -4,13 +4,13 @@
     
     <resultMap id="MemberResultMap" type="Member">
         <id property="id" column="member_id"/>
-        <id property="username" column="username"/>
-        <id property="password" column="password"/>
-        <id property="nickname" column="nickname"/>
-        <id property="signature" column="signature"/>
-        <id property="createdDate" column="created_date"/>
-        <id property="lastModifiedDate" column="last_modified_date"/>
-        <id property="deleteYn" column="delete_yn"/>
+        <result property="username" column="username"/>
+        <result property="password" column="password"/>
+        <result property="nickname" column="nickname"/>
+        <result property="signature" column="signature"/>
+        <result property="createdDate" column="created_date"/>
+        <result property="lastModifiedDate" column="last_modified_date"/>
+        <result property="deleteYn" column="delete_yn"/>
         <result property="role" column="role" typeHandler="com.project.alfa.entities.EnumTypeHandler"/>
         <association property="authInfo" javaType="AuthInfo">
             <result property="auth" column="auth"/>
@@ -20,8 +20,12 @@
             <result property="oAuthProvider" column="o_auth_provider"/>
             <result property="oAuthProviderId" column="o_auth_provider_id"/>
         </association>
-        <collection property="postIds" ofType="java.lang.Long" column="post_id"/>
-        <collection property="commentIds" ofType="java.lang.Long" column="comment_id"/>
+        <collection property="postIds" ofType="java.lang.Long">
+            <id column="post_id"/>
+        </collection>
+        <collection property="commentIds" ofType="java.lang.Long">
+            <id column="comment_id"/>
+        </collection>
     </resultMap>
     
     <insert id="save" useGeneratedKeys="true" keyColumn="member_id" keyProperty="id">
@@ -44,7 +48,7 @@
     </insert>
     
     <select id="findById" resultMap="MemberResultMap">
-        SELECT member.*, GROUP_CONCAT(post.post_id) AS postIds, GROUP_CONCAT(comment.comment_id) AS commentIds
+        SELECT member.*, post.post_id, comment.comment_id
         FROM tbl_members AS member
                  LEFT JOIN tbl_posts AS post ON (member.member_id = post.member_id)
                  LEFT JOIN tbl_comments AS comment ON (member.member_id = comment.member_id)
@@ -53,7 +57,7 @@
     </select>
     
     <select id="findByIdAndDeleteYn" resultMap="MemberResultMap">
-        SELECT member.*, GROUP_CONCAT(post.post_id) AS postIds, GROUP_CONCAT(comment.comment_id) AS commentIds
+        SELECT member.*, post.post_id, comment.comment_id
         FROM tbl_members AS member
                  LEFT JOIN tbl_posts AS post
                            ON member.member_id = post.member_id AND post.delete_yn = #{deleteYn}
@@ -65,28 +69,28 @@
     </select>
     
     <select id="findByUsername" resultMap="MemberResultMap">
-        SELECT member.*, GROUP_CONCAT(post.post_id) AS postIds, GROUP_CONCAT(comment.comment_id) AS commentIds
+        SELECT member.*, post.post_id, comment.comment_id
         FROM tbl_members AS member
                  LEFT JOIN tbl_posts AS post ON member.member_id = post.member_id
                  LEFT JOIN tbl_comments AS comment ON member.member_id = comment.member_id
-        WHERE member.username = #{username}
+        WHERE member.username = LOWER(#{username})
         GROUP BY member.member_id;
     </select>
     
     <select id="findByUsernameAndDeleteYn" resultMap="MemberResultMap">
-        SELECT member.*, GROUP_CONCAT(post.post_id) AS postIds, GROUP_CONCAT(comment.comment_id) AS commentIds
+        SELECT member.*, post.post_id, comment.comment_id
         FROM tbl_members AS member
                  LEFT JOIN tbl_posts AS post
                            ON member.member_id = post.member_id AND post.delete_yn = #{deleteYn}
                  LEFT JOIN tbl_comments AS comment
                            ON member.member_id = comment.member_id AND comment.delete_yn = #{deleteYn}
-        WHERE member.username = #{username}
+        WHERE member.username = LOWER(#{username})
           AND member.delete_yn = #{deleteYn}
         GROUP BY member.member_id;
     </select>
     
     <select id="findAll" resultMap="MemberResultMap">
-        SELECT member.*, GROUP_CONCAT(post.post_id) AS postIds, GROUP_CONCAT(comment.comment_id) AS commentIds
+        SELECT member.*, post.post_id, comment.comment_id
         FROM tbl_members AS member
                  LEFT JOIN tbl_posts AS post ON member.member_id = post.member_id
                  LEFT JOIN tbl_comments AS comment ON member.member_id = comment.member_id
@@ -94,7 +98,7 @@
     </select>
     
     <select id="findAllByAuth" resultMap="MemberResultMap">
-        SELECT member.*, GROUP_CONCAT(post.post_id) AS postIds, GROUP_CONCAT(comment.comment_id) AS commentIds
+        SELECT member.*, post.post_id, comment.comment_id
         FROM tbl_members AS member
                  LEFT JOIN tbl_posts AS post ON member.member_id = post.member_id
                  LEFT JOIN tbl_comments AS comment ON member.member_id = comment.member_id
@@ -103,7 +107,7 @@
     </select>
     
     <select id="findAllByDeleteYn" resultMap="MemberResultMap">
-        SELECT member.*, GROUP_CONCAT(post.post_id) AS postIds, GROUP_CONCAT(comment.comment_id) AS commentIds
+        SELECT member.*, post.post_id, comment.comment_id
         FROM tbl_members AS member
                  LEFT JOIN tbl_posts AS post
                            ON member.member_id = post.member_id AND post.delete_yn = #{deleteYn}
