@@ -20,7 +20,6 @@
     </insert>
     
     <insert id="saveAll" useGeneratedKeys="true" keyColumn="post_attachment_id" keyProperty="id">
-        SET AUTOCOMMIT = 0;
         INSERT INTO tbl_post_attachments(post_id, original_file_name, store_file_name, store_file_path, file_size)
         VALUES
         <foreach collection="params" item="param" separator=",">
@@ -31,8 +30,6 @@
             #{param.fileSize})
         </foreach>
         ;
-        COMMIT;
-        SET AUTOCOMMIT = 1;
     </insert>
     
     <select id="findById" resultMap="AttachmentResultMap">

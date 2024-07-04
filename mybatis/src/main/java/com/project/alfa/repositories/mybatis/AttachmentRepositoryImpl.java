@@ -35,9 +35,9 @@ public class AttachmentRepositoryImpl implements AttachmentRepository {
      */
     @Override
     public List<Attachment> saveAll(List<Attachment> attachments) {
-//        attachmentMapper.saveAll(attachments);
-        for (Attachment attachment : attachments)
-            attachmentMapper.save(attachment);
+        attachmentMapper.saveAll(attachments);
+//        for (Attachment attachment : attachments)
+//            attachmentMapper.save(attachment);
         return attachments;
     }
     
