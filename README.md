@@ -47,6 +47,9 @@ Java / Spring Boot 기반 CRUD 프로젝트 \+ [Kotlin 버전](https://github.co
 
 #### [ 구조 ]
 
+###### [ API ]
+![OpenAPI UI](https://github.com/user-attachments/assets/2328157d-33d4-43c3-b599-26669bdaa459)
+
 ###### [ 공통 ]
 ```
 +---main
