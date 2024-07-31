@@ -58,6 +58,8 @@ dependencies {
 	implementation 'nz.net.ultraq.thymeleaf:thymeleaf-layout-dialect'
 	//java-jwt
 	implementation 'com.auth0:java-jwt:4.4.0'
+	//SpringDoc OpenAPI UI
+	implementation 'org.springdoc:springdoc-openapi-ui:1.8.0'
 	
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
 	runtimeOnly 'com.h2database:h2'
