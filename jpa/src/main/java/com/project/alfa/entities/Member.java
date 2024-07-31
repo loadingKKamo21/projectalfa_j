@@ -61,6 +61,13 @@ public class Member extends BaseTimeEntity {
         this.deleteYn = false;
     }
     
+    @PrePersist
+    @PreUpdate
+    private void ensureUsernameLowercase() {
+        if (username != null && !username.trim().isEmpty())
+            username = username.toLowerCase();
+    }
+    
     //==================== 계정 정보 수정 메서드 ====================//
     
     /**
