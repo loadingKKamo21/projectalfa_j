@@ -6,6 +6,8 @@ import com.project.alfa.security.CustomUserDetails;
 import com.project.alfa.services.AttachmentService;
 import com.project.alfa.services.PostService;
 import com.project.alfa.services.dto.PostRequestDto;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -25,6 +27,7 @@ import java.util.Map;
                 consumes = MediaType.APPLICATION_JSON_VALUE,
                 produces = MediaType.APPLICATION_JSON_VALUE)
 @RequiredArgsConstructor
+@Tag(name = "Post API", description = "게시글 API 입니다.")
 public class PostApiController {
     
     private final PostService       postService;
@@ -39,6 +42,8 @@ public class PostApiController {
      * @return
      */
     @GetMapping
+    @Tag(name = "Post API")
+    @Operation(summary = "게시글 목록 조회", description = "게시글 목록을 조회합니다.")
     public ResponseEntity<String> postsList(
             @RequestParam(required = false, value = "condition") final String searchCondition,
             @RequestParam(required = false, value = "keyword") final String searchKeyword,
@@ -55,6 +60,8 @@ public class PostApiController {
      * @return
      */
     @GetMapping("/writer")
+    @Tag(name = "Post API")
+    @Operation(summary = "작성자 기준 게시글 목록 조회", description = "작성자(로그인된 계정) 기준으로 게시글 목록을 조회합니다.")
     public ResponseEntity<String> postsListByWriter(
             @AuthenticationPrincipal final UserDetails userDetails, Pageable pageable) {
         return ResponseEntity.ok(new Gson().toJson(
@@ -69,6 +76,8 @@ public class PostApiController {
      * @return
      */
     @GetMapping("/{postId}")
+    @Tag(name = "Post API")
+    @Operation(summary = "게시글 상세 조회", description = "게시글 상세 조회 페이지를 출력합니다.")
     public ResponseEntity<String> readPostPage(@PathVariable final Long postId, HttpServletRequest request) {
         postService.addViewCountWithCaching(postId, request.getSession().getId(), request.getRemoteAddr());
         Map<String, Object> map = new HashMap<>();
@@ -83,6 +92,8 @@ public class PostApiController {
      * @return
      */
     @GetMapping("/write")
+    @Tag(name = "Post API")
+    @Operation(summary = "게시글 작성 페이지", description = "게시글 작성 페이지를 출력합니다.")
     public ResponseEntity<String> writePostPage() {
         return ResponseEntity.ok(new Gson().toJson(new PostRequestDto()));
     }
@@ -95,6 +106,8 @@ public class PostApiController {
      * @return
      */
     @PostMapping("/write")
+    @Tag(name = "Post API")
+    @Operation(summary = "게시글 작성", description = "게시글 작성을 수행합니다.")
     public ResponseEntity<String> writePost(@AuthenticationPrincipal UserDetails userDetails,
                                             @Valid @RequestBody final PostRequestDto params) {
         params.setWriterId(((CustomUserDetails) userDetails).getId());
@@ -110,6 +123,8 @@ public class PostApiController {
      * @return
      */
     @GetMapping("/write/{postId}")
+    @Tag(name = "Post API")
+    @Operation(summary = "게시글 수정 페이지", description = "게시글 수정 페이지를 출력합니다.")
     public ResponseEntity<String> updatePostPage(@PathVariable final Long postId) {
         Map<String, Object> map = new HashMap<>();
         map.put("post", postService.read(postId));
@@ -127,6 +142,8 @@ public class PostApiController {
      * @return
      */
     @PostMapping("/write/{postId}")
+    @Tag(name = "Post API")
+    @Operation(summary = "게시글 수정", description = "게시글 수정을 수행합니다.")
     public ResponseEntity<String> updatePost(@PathVariable final Long postId,
                                              @AuthenticationPrincipal UserDetails userDetails,
                                              @Valid @RequestBody final PostRequestDto params) {
@@ -145,6 +162,8 @@ public class PostApiController {
      * @return
      */
     @PostMapping("/delete")
+    @Tag(name = "Post API")
+    @Operation(summary = "게시글 삭제", description = "게시글 삭제를 수행합니다.")
     public ResponseEntity<String> deletePost(@AuthenticationPrincipal UserDetails userDetails,
                                              @RequestBody final PostRequestDto params) {
         postService.delete(params.getId(), ((CustomUserDetails) userDetails).getId());

@@ -4,6 +4,8 @@ import com.google.gson.Gson;
 import com.project.alfa.services.AttachmentService;
 import com.project.alfa.services.dto.AttachmentResponseDto;
 import com.project.alfa.utils.FileUtil;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.Resource;
 import org.springframework.http.*;
@@ -19,6 +21,7 @@ import java.net.URLEncoder;
 @RequestMapping(value = "/api/posts/{postId}/attachments",
                 consumes = MediaType.APPLICATION_JSON_VALUE)
 @RequiredArgsConstructor
+@Tag(name = "Attachment API", description = "첨부파일 API 입니다.")
 public class AttachmentApiController {
     
     private final AttachmentService attachmentService;
@@ -31,6 +34,8 @@ public class AttachmentApiController {
      * @return
      */
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
+    @Tag(name = "Attachment API")
+    @Operation(summary = "첨부파일 목록 조회", description = "게시글에 포함된 첨부파일 목록을 조회합니다.")
     public ResponseEntity<String> findAllFilesByPost(@PathVariable final Long postId) {
         return ResponseEntity.ok(new Gson().toJson(attachmentService.findAllFilesByPost(postId)));
     }
@@ -44,6 +49,8 @@ public class AttachmentApiController {
      */
     @GetMapping(value = "/{fileId}/download",
                 produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+    @Tag(name = "Attachment API")
+    @Operation(summary = "첨부파일 다운로드", description = "첨부파일을 다운로드합니다.")
     public ResponseEntity<Resource> downloadFile(@PathVariable final Long postId, @PathVariable final Long fileId) {
         AttachmentResponseDto file     = attachmentService.findFileById(fileId);
         Resource              resource = fileUtil.readAttachmentFileAsResource(file);

@@ -93,6 +93,23 @@ logging:
   level:
     com.project.alfa.repositories.mybatis: trace
 
+#SpringDoc OpenAPI UI configuration
+springdoc:
+  api-docs:
+    path: /api-docs
+    groups:
+      enabled: true
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+    display-request-duration: true
+    doc-expansion: none
+  cache:
+    disabled: true
+  model-and-view-allowed: true
+
 #General configuration
 app:
   frontend:

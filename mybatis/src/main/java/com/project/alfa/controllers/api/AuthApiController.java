@@ -1,6 +1,8 @@
 package com.project.alfa.controllers.api;
 
 import com.project.alfa.services.JwtService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -21,6 +23,7 @@ import java.util.Map;
                 consumes = MediaType.APPLICATION_JSON_VALUE,
                 produces = MediaType.APPLICATION_JSON_VALUE)
 @RequiredArgsConstructor
+@Tag(name = "Auth API", description = "계정 인증 API 입니다.")
 public class AuthApiController {
     
     private final JwtService jwtService;
@@ -35,6 +38,8 @@ public class AuthApiController {
      * @return
      */
     @PostMapping("/refresh")
+    @Tag(name = "Auth API")
+    @Operation(summary = "JWT Token refresh", description = "JWT 토큰을 리프레쉬합니다.")
     public ResponseEntity<String> refreshToken(HttpServletRequest request,
                                                HttpServletResponse response,
                                                @RequestBody(required = false) final Map<String, String> body,
