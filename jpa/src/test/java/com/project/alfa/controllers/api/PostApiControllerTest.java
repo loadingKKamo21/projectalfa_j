@@ -208,13 +208,11 @@ class PostApiControllerTest {
         //When
         ResultActions actions = mockMvc.perform(post("/api/posts/write")
                                                         .accept(MediaType.APPLICATION_JSON_VALUE)
-                                                        .contentType(MediaType.APPLICATION_JSON_VALUE)
-                                                        .content(gson.toJson(new PostRequestDto(null,
-                                                                                                1L,
-                                                                                                "Test title",
-                                                                                                "Test " +
-                                                                                                "content",
-                                                                                                false))));
+                                                        .contentType(MediaType.MULTIPART_FORM_DATA_VALUE)
+                                                        .param("writerId", "1")
+                                                        .param("title", "Test title")
+                                                        .param("content", "Test content")
+                                                        .param("noticeYn", "false"));
         
         //Then
         actions.andExpect(status().isOk())
@@ -235,8 +233,7 @@ class PostApiControllerTest {
         //When
         ResultActions actions = mockMvc.perform(post("/api/posts/write")
                                                         .accept(MediaType.APPLICATION_JSON_VALUE)
-                                                        .contentType(MediaType.APPLICATION_JSON_VALUE)
-                                                        .content(gson.toJson(new PostRequestDto())));
+                                                        .contentType(MediaType.MULTIPART_FORM_DATA_VALUE));
         
         //Then
         actions.andExpect(status().isBadRequest())
@@ -284,14 +281,12 @@ class PostApiControllerTest {
         //When
         ResultActions actions = mockMvc.perform(post("/api/posts/write/{postId}", 1)
                                                         .accept(MediaType.APPLICATION_JSON_VALUE)
-                                                        .contentType(MediaType.APPLICATION_JSON_VALUE)
-                                                        .content(gson.toJson(new PostRequestDto(1L,
-                                                                                                1L,
-                                                                                                "Test " +
-                                                                                                "title",
-                                                                                                "Test " +
-                                                                                                "content",
-                                                                                                false))));
+                                                        .contentType(MediaType.MULTIPART_FORM_DATA_VALUE)
+                                                        .param("id", "1")
+                                                        .param("writerId", "1")
+                                                        .param("title", "Test title")
+                                                        .param("content", "Test content")
+                                                        .param("noticeYn", "false"));
         
         //Then
         actions.andExpect(status().isOk())
@@ -313,8 +308,7 @@ class PostApiControllerTest {
         //When
         ResultActions actions = mockMvc.perform(post("/api/posts/write/{postId}", 1)
                                                         .accept(MediaType.APPLICATION_JSON_VALUE)
-                                                        .contentType(MediaType.APPLICATION_JSON_VALUE)
-                                                        .content(gson.toJson(new PostRequestDto())));
+                                                        .contentType(MediaType.MULTIPART_FORM_DATA_VALUE));
         
         //Then
         actions.andExpect(status().isBadRequest())
