@@ -2,6 +2,7 @@ package com.project.alfa.services;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
+import com.project.alfa.aop.annotation.LockAop;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -56,6 +57,7 @@ public class JwtService {
      * @param userDetails - 인증 정보
      * @return JWT Refresh 토큰
      */
+    @LockAop
     public String generateRefreshToken(final UserDetails userDetails) {
         String refreshToken = JWT.create()
                                  .withClaim(USERNAME_KEY, userDetails.getUsername())
@@ -127,6 +129,7 @@ public class JwtService {
      *
      * @param refreshToken - JWT Refresh 토큰
      */
+    @LockAop
     public void deleteRefreshToken(final String refreshToken) {
         redisTemplate.delete(getUsernameFromToken(refreshToken));
     }

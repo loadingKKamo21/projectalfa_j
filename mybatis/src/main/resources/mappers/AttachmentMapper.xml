@@ -5,8 +5,8 @@
     <resultMap id="AttachmentResultMap" type="Attachment">
         <id property="id" column="post_attachment_id"/>
         <result property="postId" column="post_id"/>
-        <result property="originalFilename" column="original_file_name"/>
-        <result property="storeFilename" column="store_file_name"/>
+        <result property="originalFilename" column="original_filename"/>
+        <result property="storeFilename" column="store_filename"/>
         <result property="storeFilePath" column="store_file_path"/>
         <result property="fileSize" column="file_size"/>
         <result property="createdDate" column="created_date"/>
@@ -15,12 +15,12 @@
     </resultMap>
     
     <insert id="save" useGeneratedKeys="true" keyColumn="post_attachment_id" keyProperty="id">
-        INSERT INTO tbl_post_attachments(post_id, original_file_name, store_file_name, store_file_path, file_size)
+        INSERT INTO tbl_post_attachments(post_id, original_filename, store_filename, store_file_path, file_size)
         VALUES (#{postId}, #{originalFilename}, #{storeFilename}, #{storeFilePath}, #{fileSize});
     </insert>
     
     <insert id="saveAll" useGeneratedKeys="true" keyColumn="post_attachment_id" keyProperty="id">
-        INSERT INTO tbl_post_attachments(post_id, original_file_name, store_file_name, store_file_path, file_size)
+        INSERT INTO tbl_post_attachments(post_id, original_filename, store_filename, store_file_path, file_size)
         VALUES
         <foreach collection="params" item="param" separator=",">
             (#{param.postId},
@@ -122,6 +122,11 @@
             #{id}
         </foreach>
         AND delete_yn = 1;
+    </delete>
+    
+    <delete id="deleteAll">
+        DELETE
+        FROM tbl_post_attachments;
     </delete>
 
 </mapper>

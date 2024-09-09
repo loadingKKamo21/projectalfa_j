@@ -48,4 +48,6 @@ public interface PostMapper {
     
     void permanentlyDeleteAllByIds(@Param("ids") List<Long> ids);
     
+    void deleteAll();
+    
 }

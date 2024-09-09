@@ -18,7 +18,7 @@ public class SearchParam {
     public SearchParam(String searchCondition, String searchKeyword) {
         this.searchCondition = searchCondition;
         this.searchKeyword = searchKeyword;
-        this.keywords = searchKeyword == null ? new ArrayList<>() : Arrays.asList(searchKeyword.split("\\s+"));
+        this.keywords = searchKeyword == null || searchKeyword.trim().isEmpty() ? new ArrayList<>() : Arrays.asList(searchKeyword.split("\\s+"));
     }
     
 }

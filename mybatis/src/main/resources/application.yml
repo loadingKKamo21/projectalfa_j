@@ -1,5 +1,11 @@
 server:
   port: 8080
+  tomcat:
+    threads:
+      max: 200
+      min-spare: 10
+    max-connections: 8192
+    accept-count: 100
   servlet:
     context-path: /
     encoding:
@@ -16,13 +22,21 @@ spring:
     livereload:
       enabled: true
   datasource:
-    driver-class-name: org.h2.Driver
-    url: jdbc:h2:tcp://localhost/~/test;MODE=MYSQL;DATABASE_TO_LOWER=TRUE
-    username: sa
-    password:
+#    driver-class-name: org.h2.Driver
+#    url: jdbc:h2:tcp://localhost/~/test;MODE=MYSQL;DATABASE_TO_LOWER=TRUE
+#    username: sa
+#    password:
+#    driver-class-name: com.mysql.cj.jdbc.Driver
+#    url: jdbc:mysql://localhost:3306/test
+#    username: root
+#    password:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://${AWS_RDS_ENDPOINT}:3306/${AWS_RDS_DATABASE}
+    username: ${AWS_RDS_USERNAME}
+    password: ${AWS_RDS_PASSWORD}
   sql:
     init:
-      mode: always
+      mode: never
   data:
     web:
       pageable:
@@ -52,29 +66,40 @@ spring:
       client:
         registration:
           google:
-            client-id: { Google OAuth 2.0 Client Id }
-            client-secret: { Google OAuth 2.0 Client Secret }
+            client-id: ${OAUTH_GOOGLE_CLIENT_ID}
+            client-secret: ${OAUTH_GOOGLE_CLIENT_SECRET}
             scope:
               - email
               - profile
-  mail:
-    host: localhost
-    port: 25
 #  mail:
-#    host: smtp.gmail.com
-#    port: 587
-#    username: { Google Username }
-#    password: { Google Password }
-#    properties:
-#      mail:
-#        smtp:
-#          starttls:
-#            enable: true
-#            required: true
-#          auth: true
-#          connectiontimeout: 5000
-#          timeout: 5000
-#          writetimeout: 5000
+#    host: localhost
+#    port: 25
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${SMTP_GOOGLE_USERNAME}
+    password: ${SMTP_GOOGLE_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          starttls:
+            enable: true
+            required: true
+          auth: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+
+#AWS configuration
+cloud:
+  aws:
+    credentials:
+      access-key: ${AWS_ACCESS_KEY}
+      secret-key: ${AWS_SECRET_KEY}
+    region:
+      static: ${AWS_REGION}
+    stack:
+      auto: false
 
 mybatis:
   configuration:
@@ -89,10 +114,6 @@ pagehelper:
   helper-dialect: MySQL
   reasonable: true
 
-logging:
-  level:
-    com.project.alfa.repositories.mybatis: trace
-
 #SpringDoc OpenAPI UI configuration
 springdoc:
   api-docs:
@@ -102,33 +123,43 @@ springdoc:
   swagger-ui:
     enabled: true
     path: /swagger-ui.html
-    tags-sorter: alpha
     operations-sorter: alpha
+    tags-sorter: alpha
     display-request-duration: true
     doc-expansion: none
   cache:
     disabled: true
   model-and-view-allowed: true
 
+logging:
+  level:
+    com.project.alfa.repositories.mybatis: trace
+
 #General configuration
 app:
   frontend:
-    url: http://alfa.com
-file:
-  upload:
-    location: { File Upload Location }
+    url: ${FRONTEND_URL}
+#file:
+#  upload:
+#    location: ${LOCAL_FILE_UPLOAD_LOCATION}
 
 #JWT configuration
 jwt:
-  secret: SecureSecretKey
-  issuer: alfaIssuer
+  secret: ${JWT_SECRET}
+  issuer: ${JWT_ISSUER}
   token:
     access-expiration: 1800
     refresh-expiration: 604800
 
 #Email configuration
 email:
-  from: no-reply@alfa.com
+  from: no-reply@${FRONTEND_URL}
+
+#AWS S3 configuration
+aws:
+  s3:
+    bucket: ${AWS_S3_BUCKET}
+    upload-dir: ${AWS_S3_UPLOAD_DIR}
 
 ---
 
@@ -137,11 +168,53 @@ spring:
     activate:
       on-profile: test
   datasource:
+    driver-class-name: org.h2.Driver
     url: jdbc:h2:mem:test;MODE=MYSQL;DATABASE_TO_LOWER=TRUE
+    username: sa
+    password:
   sql:
     init:
       mode: always
   mail:
+    host: localhost
     port: 3025
     username: springboot
     password: secret
+    properties:
+      mail:
+        smtp:
+          starttls:
+            enable: false
+            required: false
+
+#AWS configuration
+cloud:
+  aws:
+    credentials:
+      access-key: ""
+      secret-key: ""
+    region:
+      static: ""
+
+#General configuration
+app:
+  frontend:
+    url: ""
+file:
+  upload:
+    location: Z:/
+
+#JWT configuration
+jwt:
+  secret: SECRET
+  issuer: ISSUER
+
+#Email configuration
+email:
+  from: no-reply@mail.com
+
+#AWS S3 configuration
+aws:
+  s3:
+    bucket: ""
+    upload-dir: ""

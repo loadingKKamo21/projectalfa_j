@@ -46,4 +46,6 @@ public interface MemberRepository {
     
     void permanentlyDeleteById(Long id);
     
+    void deleteAll();
+    
 }

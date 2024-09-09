@@ -1,5 +1,6 @@
 package com.project.alfa.services;
 
+import com.project.alfa.aop.annotation.LockAop;
 import com.project.alfa.entities.Post;
 import com.project.alfa.entities.Role;
 import com.project.alfa.error.exception.EntityNotFoundException;
@@ -135,6 +136,7 @@ public class PostService {
      *
      * @param dto - 게시글 수정 정보 DTO
      */
+    @LockAop
     @Transactional
     public void update(final PostRequestDto dto) {
         //수정 권한 검증
@@ -185,6 +187,7 @@ public class PostService {
      * @param id       - PK
      * @param writerId - 작성자 FK
      */
+    @LockAop
     @Transactional
     public void delete(final Long id, final Long writerId) {
         //삭제 권한 검증
@@ -199,6 +202,7 @@ public class PostService {
      * @param ids      - PK 목록
      * @param writerId - 작성자 FK
      */
+    @LockAop
     @Transactional
     public void deleteAll(final List<Long> ids, final Long writerId) {
         //삭제 권한 검증

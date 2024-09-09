@@ -259,6 +259,14 @@ public class CommentRepositoryImpl implements CommentRepository {
     }
     
     /**
+     * 모든 댓글 정보 영구 삭제
+     */
+    @Override
+    public void deleteAll() {
+        commentMapper.deleteAll();
+    }
+    
+    /**
      * 페이징 및 정렬 적용
      *
      * @param pageable - 페이징 객체

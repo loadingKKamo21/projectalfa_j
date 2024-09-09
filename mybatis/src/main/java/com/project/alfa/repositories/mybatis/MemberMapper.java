@@ -53,4 +53,6 @@ public interface MemberMapper {
     
     void permanentlyDeleteById(Long id);
     
+    void deleteAll();
+    
 }

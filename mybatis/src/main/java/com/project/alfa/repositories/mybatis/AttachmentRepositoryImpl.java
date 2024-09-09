@@ -181,4 +181,12 @@ public class AttachmentRepositoryImpl implements AttachmentRepository {
         attachmentMapper.permanentlyDeleteAllByIds(ids);
     }
     
+    /**
+     * 모든 첨부파일 정보 영구 삭제
+     */
+    @Override
+    public void deleteAll() {
+        attachmentMapper.deleteAll();
+    }
+    
 }

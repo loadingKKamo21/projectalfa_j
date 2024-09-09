@@ -55,4 +55,6 @@ public interface PostRepository {
     
     void permanentlyDeleteAllByIds(List<Long> ids);
     
+    void deleteAll();
+    
 }

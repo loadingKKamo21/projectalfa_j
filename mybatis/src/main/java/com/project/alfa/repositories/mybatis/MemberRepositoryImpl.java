@@ -230,4 +230,12 @@ public class MemberRepositoryImpl implements MemberRepository {
         memberMapper.permanentlyDeleteById(id);
     }
     
+    /**
+     * 모든 계정 정보 영구 삭제
+     */
+    @Override
+    public void deleteAll() {
+        memberMapper.deleteAll();
+    }
+    
 }

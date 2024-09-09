@@ -1,5 +1,6 @@
 package com.project.alfa.services;
 
+import com.project.alfa.aop.annotation.LockAop;
 import com.project.alfa.entities.Comment;
 import com.project.alfa.error.exception.EntityNotFoundException;
 import com.project.alfa.error.exception.ErrorCode;
@@ -69,6 +70,7 @@ public class CommentService {
      *
      * @param dto - 댓글 수정 정보 DTO
      */
+    @LockAop
     @Transactional
     public void update(final CommentRequestDto dto) {
         //수정 권한 검증
@@ -77,17 +79,22 @@ public class CommentService {
         Comment comment = commentRepository.findById(dto.getId(), false)
                                            .orElseThrow(() -> new EntityNotFoundException(
                                                    "Could not found 'Comment' by id: " + dto.getId()));
+        boolean flag = false;
         
         Comment.CommentBuilder paramBuilder = Comment.builder();
         paramBuilder.id(dto.getId()).writerId(dto.getWriterId()).postId(dto.getPostId());
         
         //내용 변경
-        if (!comment.getContent().equals(dto.getContent()))
+        if (!comment.getContent().equals(dto.getContent())) {
+            flag = true;
             paramBuilder.content(dto.getContent());
+        }
         
         Comment param = paramBuilder.build();
         
-        commentRepository.update(param);
+        //변경될 값이 있는 지 확인
+        if (flag)
+            commentRepository.update(param);
     }
     
     /**
@@ -96,6 +103,7 @@ public class CommentService {
      * @param id       - PK
      * @param writerId - 작성자 FK
      */
+    @LockAop
     @Transactional
     public void delete(final Long id, final Long writerId) {
         //삭제 권한 검증
@@ -110,6 +118,7 @@ public class CommentService {
      * @param ids      - PK 목록
      * @param writerId - 작성자 FK
      */
+    @LockAop
     @Transactional
     public void deleteAll(final List<Long> ids, final Long writerId) {
         //삭제 권한 검증

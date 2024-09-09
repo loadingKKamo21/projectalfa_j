@@ -48,4 +48,6 @@ public interface CommentRepository {
     
     void permanentlyDeleteAllByIds(List<Long> ids);
     
+    void deleteAll();
+    
 }

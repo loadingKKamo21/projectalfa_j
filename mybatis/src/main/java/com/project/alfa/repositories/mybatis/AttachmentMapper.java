@@ -37,4 +37,6 @@ public interface AttachmentMapper {
     
     void permanentlyDeleteAllByIds(@Param("ids") List<Long> ids);
     
+    void deleteAll();
+    
 }

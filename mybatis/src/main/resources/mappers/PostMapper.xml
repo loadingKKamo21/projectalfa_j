@@ -284,5 +284,10 @@
         </foreach>
         AND delete_yn = 1;
     </delete>
+    
+    <delete id="deleteAll">
+        DELETE
+        FROM tbl_posts;
+    </delete>
 
 </mapper>

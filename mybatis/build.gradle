@@ -33,7 +33,7 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
-	implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:2.3.1'
+	implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:2.3.2'
 	implementation 'org.thymeleaf.extras:thymeleaf-extras-springsecurity5'
 	//Gson
 	implementation 'com.google.code.gson:gson:2.10.1'
@@ -49,14 +49,19 @@ dependencies {
 	implementation 'com.auth0:java-jwt:4.4.0'
 	//SpringDoc OpenAPI UI
 	implementation 'org.springdoc:springdoc-openapi-ui:1.8.0'
+	implementation 'io.awspring.cloud:spring-cloud-starter-aws:2.4.4'
+	//AWS Java SDK For Amazon S3
+	implementation 'com.amazonaws:aws-java-sdk-s3'
 	
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
-	runtimeOnly 'com.h2database:h2'
+	developmentOnly 'com.h2database:h2'
+	runtimeOnly 'com.mysql:mysql-connector-j'
 	annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
 	
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter-test:2.3.1'
 	testImplementation 'org.springframework.security:spring-security-test'
+	testImplementation 'com.h2database:h2'
 	//GreenMail - JUnit5 support via GreenMailExtension
 	testImplementation 'com.icegreen:greenmail-junit5:1.6.15'
 	//Embedded Redis

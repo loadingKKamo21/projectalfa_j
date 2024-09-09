@@ -208,5 +208,10 @@
         WHERE member_id = #{id}
           AND delete_yn = 1;
     </update>
+    
+    <delete id="deleteAll">
+        DELETE
+        FROM tbl_members;
+    </delete>
 
 </mapper>
