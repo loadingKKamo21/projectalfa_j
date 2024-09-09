@@ -1,5 +1,6 @@
 package com.project.alfa.services;
 
+import com.project.alfa.aop.annotation.LockAop;
 import com.project.alfa.entities.AuthInfo;
 import com.project.alfa.entities.Member;
 import com.project.alfa.entities.Role;
@@ -18,7 +19,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -81,10 +81,12 @@ public class MemberService {
      * @param authToken - 인증 토큰
      * @param authTime  - 인증 시간
      */
+    @LockAop
     @Transactional
     public void verifyEmailAuth(final String username, final String authToken, final LocalDateTime authTime) {
         Member member = memberRepository.findByUsername(username.toLowerCase(), false)
-                                        .orElseThrow(() -> new EntityNotFoundException("Could not found 'Member' by username: " + username));
+                                        .orElseThrow(() -> new EntityNotFoundException(
+                                                "Could not found 'Member' by username: " + username));
         
         //이미 인증된 계정인 경우
         if (member.getAuthInfo().isAuth())
@@ -106,10 +108,12 @@ public class MemberService {
      *
      * @param username - 메일 주소
      */
+    @LockAop
     @Transactional
     public void resendVerifyEmail(final String username) {
         Member member = memberRepository.findByUsername(username.toLowerCase(), false)
-                                        .orElseThrow(() -> new EntityNotFoundException("Could not found 'Member' by username: " + username));
+                                        .orElseThrow(() -> new EntityNotFoundException(
+                                                "Could not found 'Member' by username: " + username));
         //새로운 인증 토큰 설정
         member.updateEmailAuthToken(UUID.randomUUID().toString());
         
@@ -124,10 +128,12 @@ public class MemberService {
      *
      * @param username - 메일 주소
      */
+    @LockAop
     @Transactional
     public void findPassword(final String username) {
         Member member = memberRepository.findByUsername(username.toLowerCase(), false)
-                                        .orElseThrow(() -> new EntityNotFoundException("Could not found 'Member' by username: " + username));
+                                        .orElseThrow(() -> new EntityNotFoundException(
+                                                "Could not found 'Member' by username: " + username));
         
         //이메일 인증 여부 확인
         if (!member.getAuthInfo().isAuth()) {
@@ -151,7 +157,8 @@ public class MemberService {
      */
     public MemberInfoResponseDto findById(final Long id) {
         return new MemberInfoResponseDto(memberRepository.findById(id, false)
-                                                         .orElseThrow(() -> new EntityNotFoundException("Could not found 'Member' by id: " + id)));
+                                                         .orElseThrow(() -> new EntityNotFoundException(
+                                                                 "Could not found 'Member' by id: " + id)));
     }
     
     /**
@@ -162,7 +169,8 @@ public class MemberService {
      */
     public MemberInfoResponseDto findByUsername(final String username) {
         return new MemberInfoResponseDto(memberRepository.findByUsername(username.toLowerCase(), false)
-                                                         .orElseThrow(() -> new EntityNotFoundException("Could not found 'Member' by username: " + username)));
+                                                         .orElseThrow(() -> new EntityNotFoundException(
+                                                                 "Could not found 'Member' by username: " + username)));
     }
     
     /**
@@ -170,10 +178,12 @@ public class MemberService {
      *
      * @param dto - 계정 수정 정보 DTO
      */
+    @LockAop
     @Transactional
     public void update(final MemberUpdateRequestDto dto) {
         Member member = memberRepository.findById(dto.getId(), false)
-                                        .orElseThrow(() -> new EntityNotFoundException("Could not found 'Member' by id: " + dto.getId()));
+                                        .orElseThrow(() -> new EntityNotFoundException(
+                                                "Could not found 'Member' by id: " + dto.getId()));
         
         //이메일 인증 여부 확인
         if (!member.getAuthInfo().isAuth()) {
@@ -219,10 +229,12 @@ public class MemberService {
      * @param id       - PK
      * @param password - 비밀번호
      */
+    @LockAop
     @Transactional
     public void delete(final Long id, final String password) {
         Member member = memberRepository.findById(id, false)
-                                        .orElseThrow(() -> new EntityNotFoundException("Could not found 'Member' by id: " + id));
+                                        .orElseThrow(() -> new EntityNotFoundException(
+                                                "Could not found 'Member' by id: " + id));
         
         //비밀번호 확인
         if (!passwordEncoder.matches(password, member.getPassword()))

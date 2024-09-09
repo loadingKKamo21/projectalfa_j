@@ -1,11 +1,11 @@
 package com.project.alfa.controllers.api;
 
 import com.google.gson.Gson;
-import com.project.alfa.repositories.dto.SearchParam;
 import com.project.alfa.security.CustomUserDetails;
 import com.project.alfa.services.AttachmentService;
 import com.project.alfa.services.PostService;
 import com.project.alfa.services.dto.PostRequestDto;
+import com.project.alfa.repositories.dto.SearchParam;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -105,11 +105,11 @@ public class PostApiController {
      * @param params      - 게시글 작성 정보 DTO
      * @return
      */
-    @PostMapping("/write")
+    @PostMapping(value = "/write", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Tag(name = "Post API")
     @Operation(summary = "게시글 작성", description = "게시글 작성을 수행합니다.")
     public ResponseEntity<String> writePost(@AuthenticationPrincipal UserDetails userDetails,
-                                            @Valid @RequestBody final PostRequestDto params) {
+                                            @Valid @ModelAttribute final PostRequestDto params) {
         params.setWriterId(((CustomUserDetails) userDetails).getId());
         Long id = postService.create(params);
         attachmentService.saveAllFiles(id, params.getFiles());
@@ -141,12 +141,12 @@ public class PostApiController {
      * @param params      - 게시글 수정 정보 DTO
      * @return
      */
-    @PostMapping("/write/{postId}")
+    @PostMapping(value = "/write/{postId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Tag(name = "Post API")
     @Operation(summary = "게시글 수정", description = "게시글 수정을 수행합니다.")
     public ResponseEntity<String> updatePost(@PathVariable final Long postId,
                                              @AuthenticationPrincipal UserDetails userDetails,
-                                             @Valid @RequestBody final PostRequestDto params) {
+                                             @Valid @ModelAttribute final PostRequestDto params) {
         params.setWriterId(((CustomUserDetails) userDetails).getId());
         postService.update(params);
         attachmentService.deleteAllFilesByIds(params.getRemoveFileIds(), postId);

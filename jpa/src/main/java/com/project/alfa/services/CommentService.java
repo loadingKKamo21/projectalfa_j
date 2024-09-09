@@ -1,5 +1,6 @@
 package com.project.alfa.services;
 
+import com.project.alfa.aop.annotation.LockAop;
 import com.project.alfa.entities.Comment;
 import com.project.alfa.entities.Member;
 import com.project.alfa.entities.Post;
@@ -77,6 +78,7 @@ public class CommentService {
      *
      * @param dto - 댓글 수정 정보 DTO
      */
+    @LockAop
     @Transactional
     public void update(final CommentRequestDto dto) {
         Comment comment = commentRepository.findById(dto.getId(), false)
@@ -98,6 +100,7 @@ public class CommentService {
      * @param id       - PK
      * @param writerId - 작성자 FK
      */
+    @LockAop
     @Transactional
     public void delete(final Long id, final Long writerId) {
         Comment comment = commentRepository.findById(id, false)
@@ -117,6 +120,7 @@ public class CommentService {
      * @param ids      - PK 목록
      * @param writerId - 작성자 FK
      */
+    @LockAop
     @Transactional
     public void deleteAll(final List<Long> ids, final Long writerId) {
         List<Comment> comments = commentRepository.findAll(ids, false);

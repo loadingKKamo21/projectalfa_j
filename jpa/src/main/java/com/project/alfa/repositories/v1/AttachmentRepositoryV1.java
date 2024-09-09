@@ -180,6 +180,13 @@ public class AttachmentRepositoryV1 {
     }
     
     /**
+     * 모든 첨부파일 정보 영구 삭제
+     */
+    public void deleteAll() {
+        em.createQuery("DELETE FROM Attachment a").executeUpdate();
+    }
+    
+    /**
      * 첨부파일 정보 목록 영구 삭제
      *
      * @param attachments - 첨부파일 정보 목록

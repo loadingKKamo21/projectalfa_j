@@ -60,15 +60,20 @@ dependencies {
 	implementation 'com.auth0:java-jwt:4.4.0'
 	//SpringDoc OpenAPI UI
 	implementation 'org.springdoc:springdoc-openapi-ui:1.8.0'
+	implementation 'io.awspring.cloud:spring-cloud-starter-aws:2.4.4'
+	//AWS Java SDK For Amazon S3
+	implementation 'com.amazonaws:aws-java-sdk-s3'
 	
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
-	runtimeOnly 'com.h2database:h2'
+	developmentOnly 'com.h2database:h2'
+	runtimeOnly 'com.mysql:mysql-connector-j'
 	annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
 	//Querydsl
 	annotationProcessor "com.querydsl:querydsl-apt:${queryDslVersion}"
 	
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.security:spring-security-test'
+	testImplementation 'com.h2database:h2'
 	//GreenMail - JUnit5 support via GreenMailExtension
 	testImplementation 'com.icegreen:greenmail-junit5:1.6.15'
 	//Embedded Redis

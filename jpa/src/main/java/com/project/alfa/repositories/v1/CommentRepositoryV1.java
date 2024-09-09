@@ -284,6 +284,13 @@ public class CommentRepositoryV1 {
     }
     
     /**
+     * 모든 댓글 정보 영구 삭제
+     */
+    public void deleteAll() {
+        em.createQuery("DELETE FROM Comment c").executeUpdate();
+    }
+    
+    /**
      * 댓글 정보 목록 영구 삭제
      *
      * @param comments - 댓글 정보 목록

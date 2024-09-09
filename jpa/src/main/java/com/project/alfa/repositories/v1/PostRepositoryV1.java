@@ -320,6 +320,13 @@ public class PostRepositoryV1 {
     }
     
     /**
+     * 모든 게시글 정보 영구 삭제
+     */
+    public void deleteAll() {
+        em.createQuery("DELETE FROM Post p").executeUpdate();
+    }
+    
+    /**
      * 게시글 정보 목록 영구 삭제
      *
      * @param posts - 게시글 정보 목록

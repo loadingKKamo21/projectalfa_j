@@ -6,9 +6,11 @@ import lombok.Setter;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.Table;
 import java.time.LocalDateTime;
 
 @Entity
+@Table(name = "tbl_persistent_logins")
 @Getter
 @Setter
 public class PersistentLogins {

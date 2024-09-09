@@ -46,12 +46,10 @@ public class MemberRepositoryV1 {
      * @return 계정 정보
      */
     public Optional<Member> findById(final Long id, final boolean deleteYn) {
-        return Optional.ofNullable(
-                em.createQuery("SELECT m FROM Member m WHERE m.id = :id AND m.deleteYn = :deleteYn", Member.class)
+        return Optional.ofNullable(em.createQuery("SELECT m FROM Member m WHERE m.id = :id AND m.deleteYn = :deleteYn", Member.class)
                   .setParameter("id", id)
                   .setParameter("deleteYn", deleteYn)
-                  .getResultList().stream().findFirst().orElse(null)
-        );
+                  .getResultList().stream().findFirst().orElse(null));
     }
     
     /**
@@ -74,13 +72,11 @@ public class MemberRepositoryV1 {
      * @return 계정 정보
      */
     public Optional<Member> findByUsername(final String username, final boolean deleteYn) {
-        return Optional.ofNullable(
-                em.createQuery("SELECT m FROM Member m WHERE m.username = :username AND m.deleteYn = :deleteYn",
+        return Optional.ofNullable(em.createQuery("SELECT m FROM Member m WHERE m.username = :username AND m.deleteYn = :deleteYn",
                                Member.class)
                   .setParameter("username", username)
                   .setParameter("deleteYn", deleteYn)
-                  .getResultList().stream().findFirst().orElse(null)
-        );
+                  .getResultList().stream().findFirst().orElse(null));
     }
     
     /**
@@ -127,14 +123,12 @@ public class MemberRepositoryV1 {
     public Optional<Member> authenticateEmail(final String username,
                                               final String emailAuthToken,
                                               final LocalDateTime authenticatedTime) {
-        return Optional.ofNullable(
-                em.createQuery("SELECT m FROM Member m WHERE m.username = :username AND m.authInfo.emailAuthToken = :emailAuthToken AND m.authInfo.emailAuthExpireTime >= :authenticatedTime AND m.deleteYn = false",
-                               Member.class)
-                  .setParameter("username", username)
-                  .setParameter("emailAuthToken", emailAuthToken)
-                  .setParameter("authenticatedTime", authenticatedTime)
-                  .getResultList().stream().findFirst().orElse(null)
-        );
+        return Optional.ofNullable(em.createQuery("SELECT m FROM Member m WHERE m.username = :username AND m.authInfo.emailAuthToken = :emailAuthToken AND m.authInfo.emailAuthExpireTime >= :authenticatedTime AND m.deleteYn = false",
+                                             Member.class)
+                                     .setParameter("username", username)
+                                     .setParameter("emailAuthToken", emailAuthToken)
+                                     .setParameter("authenticatedTime", authenticatedTime)
+                                     .getResultList().stream().findFirst().orElse(null));
     }
     
     /**
@@ -148,14 +142,12 @@ public class MemberRepositoryV1 {
     public Optional<Member> authenticateOAuth(final String username,
                                               final String provider,
                                               final String providerId) {
-        return Optional.ofNullable(
-                em.createQuery("SELECT m FROM Member m WHERE m.username = :username AND m.authInfo.oAuthProvider = :provider AND m.authInfo.oAuthProviderId = :providerId AND m.deleteYn = false",
-                               Member.class)
-                  .setParameter("username", username)
-                  .setParameter("provider", provider)
-                  .setParameter("providerId", providerId)
-                  .getResultList().stream().findFirst().orElse(null)
-        );
+        return Optional.ofNullable(em.createQuery("SELECT m FROM Member m WHERE m.username = :username AND m.authInfo.oAuthProvider = :provider AND m.authInfo.oAuthProviderId = :providerId AND m.deleteYn = false",
+                                             Member.class)
+                                     .setParameter("username", username)
+                                     .setParameter("provider", provider)
+                                     .setParameter("providerId", providerId)
+                                     .getResultList().stream().findFirst().orElse(null));
     }
     
     /**
@@ -166,7 +158,7 @@ public class MemberRepositoryV1 {
      */
     public boolean existsByUsername(final String username) {
         return em.createQuery("SELECT CASE WHEN (COUNT(m) > 0) THEN TRUE ELSE FALSE END FROM Member m WHERE m.username = :username",
-                              Boolean.class)
+                         Boolean.class)
                  .setParameter("username", username).getSingleResult();
     }
     
@@ -179,7 +171,7 @@ public class MemberRepositoryV1 {
      */
     public boolean existsByUsername(final String username, final boolean deleteYn) {
         return em.createQuery("SELECT CASE WHEN (COUNT(m) > 0) THEN TRUE ELSE FALSE END FROM Member m WHERE m.username = :username AND m.deleteYn = :deleteYn",
-                              Boolean.class)
+                         Boolean.class)
                  .setParameter("username", username)
                  .setParameter("deleteYn", deleteYn)
                  .getSingleResult();
@@ -193,7 +185,7 @@ public class MemberRepositoryV1 {
      */
     public boolean existsByNickname(final String nickname) {
         return em.createQuery("SELECT CASE WHEN (COUNT(m) > 0) THEN TRUE ELSE FALSE END FROM Member m WHERE m.nickname = :nickname",
-                              Boolean.class)
+                         Boolean.class)
                  .setParameter("nickname", nickname).getSingleResult();
     }
     
@@ -206,7 +198,7 @@ public class MemberRepositoryV1 {
      */
     public boolean existsByNickname(final String nickname, final boolean deleteYn) {
         return em.createQuery("SELECT CASE WHEN (COUNT(m) > 0) THEN TRUE ELSE FALSE END FROM Member m WHERE m.nickname = :nickname AND m.deleteYn = :deleteYn",
-                              Boolean.class)
+                         Boolean.class)
                  .setParameter("nickname", nickname)
                  .setParameter("deleteYn", deleteYn)
                  .getSingleResult();
@@ -228,6 +220,13 @@ public class MemberRepositoryV1 {
      */
     public void deleteById(final Long id) {
         em.remove(em.find(Member.class, id));
+    }
+    
+    /**
+     * 모든 계정 정보 영구 삭제
+     */
+    public void deleteAll() {
+        em.createQuery("DELETE FROM Member m").executeUpdate();
     }
     
 }

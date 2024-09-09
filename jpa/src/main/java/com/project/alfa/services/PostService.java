@@ -1,5 +1,6 @@
 package com.project.alfa.services;
 
+import com.project.alfa.aop.annotation.LockAop;
 import com.project.alfa.entities.Member;
 import com.project.alfa.entities.Post;
 import com.project.alfa.entities.Role;
@@ -141,6 +142,7 @@ public class PostService {
      *
      * @param dto - 게시글 수정 정보 DTO
      */
+    @LockAop
     @Transactional
     public void update(final PostRequestDto dto) {
         Post post = postRepository.findById(dto.getId(), false)
@@ -175,6 +177,7 @@ public class PostService {
      * @param id       - PK
      * @param writerId - 작성자 FK
      */
+    @LockAop
     @Transactional
     public void delete(final Long id, final Long writerId) {
         Post post = postRepository.findById(id, false)
@@ -194,6 +197,7 @@ public class PostService {
      * @param ids      - PK 목록
      * @param writerId - 작성자 FK
      */
+    @LockAop
     @Transactional
     public void deleteAll(final List<Long> ids, final Long writerId) {
         List<Post> posts = postRepository.findAll(ids, false);

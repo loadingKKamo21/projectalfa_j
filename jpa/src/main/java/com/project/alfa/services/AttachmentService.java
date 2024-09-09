@@ -1,5 +1,6 @@
 package com.project.alfa.services;
 
+import com.project.alfa.aop.annotation.LockAop;
 import com.project.alfa.entities.Attachment;
 import com.project.alfa.entities.Post;
 import com.project.alfa.entities.UploadFile;
@@ -76,7 +77,7 @@ public class AttachmentService {
         Post post = postRepository.findById(postId, false)
                                   .orElseThrow(
                                           () -> new EntityNotFoundException("Could not found 'Post' by id: " + postId));
-        return attachmentRepository.findAll(post.getId()).stream().map(AttachmentResponseDto::new).collect(toList());
+        return attachmentRepository.findAll(post.getId(), false).stream().map(AttachmentResponseDto::new).collect(toList());
     }
     
     /**
@@ -85,6 +86,7 @@ public class AttachmentService {
      * @param ids    - PK 목록
      * @param postId - 게시글 FK
      */
+    @LockAop
     @Transactional
     public void deleteAllFilesByIds(final List<Long> ids, final Long postId) {
         Post post = postRepository.findById(postId, false)
