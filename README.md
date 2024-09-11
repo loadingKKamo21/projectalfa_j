@@ -11,6 +11,7 @@ Java / Spring Boot 기반 CRUD 프로젝트 \+ [Kotlin 버전](https://github.co
 		- [공통](#-공통-)
 		- [JPA](#-JPA-)
 		- [MyBatis](#-MyBatis-)
+	- [클래스 다이어그램](#-클래스-다이어그램-)
 	- [코드 예시](#-코드-예시-)
 	- [설명](#-설명-)
 4. [프로젝트 실행](#프로젝트-실행)
@@ -18,14 +19,17 @@ Java / Spring Boot 기반 CRUD 프로젝트 \+ [Kotlin 버전](https://github.co
 ## 개발 환경
 
 #### Backend
-- Java, Spring Framework, JPA(+ Querydsl) or MyBatis
+- Java, Spring Framework, JPA (+Querydsl), MyBatis
+- AWS EC2
 
 #### DB
-- H2 Database, Redis
+- H2 Database, AWS RDS(MySQL), AWS S3, Redis
 - Embedded Redis (for Test)
 
 #### Tool
-- IntelliJ IDEA, Gradle, smtp4dev
+- IntelliJ IDEA, SmartGit, Gradle, DBeaver
+- smtp4dev, Postman
+- PuTTY, FileZilla
 
 ## 설계 목표
 - 스프링 부트를 활용한 CRUD API 애플리케이션
@@ -35,12 +39,25 @@ Java / Spring Boot 기반 CRUD 프로젝트 \+ [Kotlin 버전](https://github.co
 		- V2: JpaRepository + Specification 사용
 		- V3: JpaRepository + Querydsl 사용
 	- MyBatis: Mapper 활용
-- 게시글/댓글 페이징, 게시글 검색 기능
-- 스프링 시큐리티 활용 계정 2타입 설계: 이메일 인증 계정, OAuth2 계정
-    - ~~HTTP Basic 인증~~(주석)
-    - JWT 인증
-- 파일 업로드/다운로드
-- 스프링 캐시 + Redis: 게시글 조회 수 증가 로직
+- 계정 기능
+    - 스프링 시큐리티 활용 2타입 설계: 이메일 계정, OAuth2 계정
+        - ~~HTTP Basic 인증~~(주석)
+        - JWT 인증: Refresh 토큰 Redis 서버 저장, 갱신 시 활용, 로그아웃 시 삭제
+- 게시글 기능
+    - READ: 제한 없음
+    - CREATE, UPDATE, DELETE: 인증된 계정 및 작성자만 가능
+    - 검색 및 페이징
+    - 스프링 캐시 및 Redis를 활용한 조회 수 증가 로직
+- 댓글 기능
+    - READ: 제한 없음
+    - CREATE, UPDATE, DELETE: 인증된 계정 및 작성자만 가능
+    - 게시글 기준 페이징
+- 첨부파일 기능
+    - 파일 업로드/다운로드
+    - 업로드 파일 정보 DB 저장 및 실제 파일 ~~로컬~~ AWS S3 저장
+- UPDATE/DELETE 과정의 동시성 처리를 위한 락 추가
+    - Service 계층 비즈니스 로직에 적용
+    - JUnit5 테스트 코드 작성
 - Repository / Service / Controller JUnit5 테스트 코드 작성
 
 ## 프로젝트 정보
@@ -64,6 +81,7 @@ Java / Spring Boot 기반 CRUD 프로젝트 \+ [Kotlin 버전](https://github.co
 |   |               |   |   ProjectAspects.java
 |   |               |   +---annotation
 |   |               |   |       ClassAop.java
+|   |               |   |       LockAop.java            -> 동시성 처리 락 AOP
 |   |               |   |       MethodAop.java
 |   |               |   \---trace
 |   |               |       |   TraceId.java
@@ -73,6 +91,7 @@ Java / Spring Boot 기반 CRUD 프로젝트 \+ [Kotlin 버전](https://github.co
 |   |               |               ThreadLocalLogTrace.java
 |   |               +---config            //설정
 |   |               |       AopConfig.java
+|   |               |       AwsS3Config.java               -> AWS S3 설
 |   |               |       CacheConfig.java               -> 캐시 설정
 |   |               |       ProjectConfig.java             -> 빈 등록
 |   |               |       RedisConfig.java               -> Redis 설정
@@ -147,6 +166,7 @@ Java / Spring Boot 기반 CRUD 프로젝트 \+ [Kotlin 버전](https://github.co
 |   |                       RandomGenerator.java            -> 랜덤 데이터 생성(문자열, 숫자 등)
 |   \---resources
 |           application.yml
+|           schema.sql
 \---test
     \---java
         \---com
@@ -172,10 +192,15 @@ Java / Spring Boot 기반 CRUD 프로젝트 \+ [Kotlin 버전](https://github.co
                     |           MemberApiControllerTest.java
                     |           PostApiControllerTest.java
                     +---services
+                    |       AttachmentServiceConcurrencyTest.java            -> 동시성 처리 락 AOP 테스트
                     |       AttachmentServiceTest.java
+                    |       CommentServiceConcurrencyTest.java               -> 동시성 처리 락 AOP 테스트
                     |       CommentServiceTest.java
+                    |       JwtServiceConcurrencyTest.java                   -> 동시성 처리 락 AOP 테스트
                     |       JwtServiceTest.java
+                    |       MemberServiceConcurrencyTest.java                -> 동시성 처리 락 AOP 테스트
                     |       MemberServiceTest.java
+                    |       PostServiceConcurrencyTest.java                  -> 동시성 처리 락 AOP 테스트
                     |       PostServiceTest.java
                     \---utils
                             EmailSenderTest.java
@@ -271,7 +296,6 @@ Java / Spring Boot 기반 CRUD 프로젝트 \+ [Kotlin 버전](https://github.co
 |   |               |           PostMapper.java
 |   |               |           PostRepositoryImpl.java
 |   \---resources
-|       |   schema.sql
 |       \---mappers            //MyBatis Mapper
 |               AttachmentMapper.xml
 |               CommentMapper.xml
@@ -290,96 +314,133 @@ Java / Spring Boot 기반 CRUD 프로젝트 \+ [Kotlin 버전](https://github.co
                     |       PostRepositoryTest.java
 ```
 
+#### [ 클래스 다이어그램 ]
+- [JPA 프로젝트](./README-JPA-DIAGRAM.md)
+- [MyBatis 프로젝트](./README-MYBATIS-DIAGRAM.md)
+
 #### [ 코드 예시 ]
-![jpa4](https://github.com/loadingKKamo21/projectalfa_j/assets/90470901/0dc56740-3a24-4724-8c76-e6f7ad34b3b8)
-![jpa3](https://github.com/loadingKKamo21/projectalfa_j/assets/90470901/b2161756-e064-4ee5-8631-e76b22bca6f4)
-![jpa2](https://github.com/loadingKKamo21/projectalfa_j/assets/90470901/31ef5f20-74df-4b96-a5b0-d969d02fe0c7)
-![jpa1](https://github.com/loadingKKamo21/projectalfa_j/assets/90470901/58cac080-c815-4723-a7bd-753d01f478af)
-![mybatis2](https://github.com/loadingKKamo21/projectalfa_j/assets/90470901/a94cb7ac-4d00-47d5-bb6e-c40254e8aed1)
-![mybatis1](https://github.com/loadingKKamo21/projectalfa_j/assets/90470901/dbf12360-ed8e-42e6-a50f-a14b5ffa97e3)
-![controller-test3](https://github.com/loadingKKamo21/projectalfa_j/assets/90470901/d2d9d6e2-3e13-44bf-bbd3-52182424bbff)
-![controller-test2](https://github.com/loadingKKamo21/projectalfa_j/assets/90470901/344689f1-81b7-4ad0-a351-f183e7c69036)
-![controller-test1](https://github.com/loadingKKamo21/projectalfa_j/assets/90470901/b1223d36-6fd9-41ad-9a10-2a733a48d0d5)
-![jpa-test3](https://github.com/loadingKKamo21/projectalfa_j/assets/90470901/c3ef41d5-6876-44ff-87af-f23864bbc489)
-![jpa-test2](https://github.com/loadingKKamo21/projectalfa_j/assets/90470901/5830528f-2e66-4309-8d61-83235bc14dea)
-![jpa-test1](https://github.com/loadingKKamo21/projectalfa_j/assets/90470901/c24376c5-b1b1-402e-a45c-04a18f19e111)
-![jpa7](https://github.com/loadingKKamo21/projectalfa_j/assets/90470901/0004fcfd-cce8-4ab8-9f75-35dd85238382)
-![jpa6](https://github.com/loadingKKamo21/projectalfa_j/assets/90470901/82e753d6-5913-4b10-99f6-c9dbf1719ea4)
-![jpa5](https://github.com/loadingKKamo21/projectalfa_j/assets/90470901/5173ab8e-bc7a-4979-87d0-a9ebf22d342a)
+- [코드 예시 보기](./README-SAMPLE.md)
 
 #### [ 설명 ]
-- 계정, 게시글, 댓글, 첨부파일 Create / Read / Update / Delete
 - API 기반 설계
-- 게시글/댓글 조회 목록 페이징, 게시글 검색 기능
-- 스프링 시큐리티 연동 2가지 계정 가입 방식
-	- 아이디(이메일) + 이메일 인증
-	- OAuth2
-	- ~~HTTP Basic 인증~~(주석)
-	- JWT 인증
-	    - Access/RefreshToken 구분
-	    - 필터, 엔드포인트로 Request 토큰 검증
-	    - RefreshToken: Redis 서버 저장(로그아웃 시 삭제)
-- JPA 프로젝트 OSIV OFF 설정
-	- 서비스 레이어 외부로 엔티티 노출 억제
-	- 컨트롤러-서비스 전송 간 DTO 사용(MyBatis 프로젝트도 동일한 방식 적용)
+- JPA 프로젝트 OSIV OFF
+    - Service 계층 외부로 엔티티 노출 억제
+    - Controller-Service 전송 간 DTO 사용(MyBatis 프로젝트도 동일한 방식 적용)
     ![OSIV](https://github.com/loadingKKamo21/projectalfa_j/assets/90470901/eaff89eb-82e5-4d9c-8a15-e6b38122ea4c)
-- Redis 캐시 사용
-	- 게시글 조회수 증가 로직
-- 컨트롤러/서비스/리포지토리 테스트 코드 작성
+- 수정/삭제 로직에 동시성 처리 락 AOP 추가
+    - 락 미획득 스레드의 경우 100ms 간격 최대 5회까지 재획득 시도
+- 기능: 계정 관련
+    - 스프링 시큐리티 기반 JWT 활용~~(HTTP Basic 인증 주석 처리)~~
+    - JWT
+        - 로그인 시 Access/Refresh 2가지 토큰 발급
+        - Refresh 토큰은 Redis 서버 저장, Access 토큰 만료에 따른 재발급 시 활용
+        - 필터, 엔드포인트로 Request 토큰 검증
+        - 로그아웃 시 Redis 서버에 저장된 Refresh 토큰 삭제
+        - Refresh 토큰은 HTTP 헤더, 쿠키, JSON 3가지 경우 모두 사용 가능
+    - 회원 가입
+        - 이메일 계정: SMTP를 통한 이메일 검증
+        - Google OAuth2 계정
+        - 이메일, Google 계정 중복 확인
+        - 닉네임 중복 확인
+    - SMTP를 통한 이메일 검증
+        - 인증 제한 시간 존재
+        - 전송된 메일에 포함된 이메일 정보 및 토큰으로 인증 확인
+        - 제한 시간 초과 및 인증 토큰 오류로 인증 실패 시 새로운 토큰 발급 및 인증 메일 재발송
+        - 미인증 시 로그인 불가
+    - 비밀번호 찾기
+        - 가입 시 사용한 이메일(아이디) 확인 후 임시 비밀번호 메일 발송
+    - 회원 정보 조회
+    - 회원 정보 수정
+        - 비밀번호, 닉네임, 서명 수정 가능
+        - 닉네임 중복 확인 및 이메일 미인증 계정 접근 시 인증 메일 발송
+    - 회원 탈퇴
+- 기능: 게시글 관련
+    - 검색 페이징 목록 조회
+        - 검색 조건(제목, 내용, 제목 또는 내용, 작성자), 검색 키워드
+    - 작성자 기준 페이징 목록 조회
+        - 로그인 된 계정 기준 작성한 게시글 페이징 조회
+    - 게시글 조회
+        - 조회 수 증가 캐싱, Redis 서버 저장
+        - 중복 조회에 따른 조회 수 증가 방지
+    - 게시글 작성
+        - 인증된 계정만 접근 가능
+    - 게시글 수정
+        - 인증된 계정 + 게시글 작성자만 접근 가능
+    - 게시글 삭제
+        - 인증된 계정 + 게시글 작성자만 접근 가능
+- 기능: 댓글 관련
+    - 게시글 기준 페이징 목록 조회
+    - 작성자 기준 페이징 목록 조회
+        - 로그인 된 계정 기준 작성한 댓글 페이징 조회
+    - 댓글 작성
+        - 인증된 계정만 접근 가능
+    - 댓글 수정
+        - 인증된 계정 + 댓글 작성자만 접근 가능
+    - 댓글 삭제
+        - 인증된 계정 + 댓글 작성자만 접근 가능
+- 기능: 첨부파일
+    - 게시글 작성/수정 시 첨부파일 추가/삭제 기능
+    - 첨부파일 다운로드
 
 ## 프로젝트 실행
-- 기본 설정값 기반
-- application.yml 설정
-	- DB: [H2 Database](https://www.h2database.com/html/main.html)와 [Redis](https://redis.io/) 설치/실행
-	```
-	...
-	spring:
-		datasource:
-			driver-class-name: org.h2.Driver
-			url: jdbc:h2:tcp://localhost/~/test;MODE=MYSQL;DATABASE_TO_LOWER=TRUE
-			username: sa
-			password:
-	...
-	redis:
-		host: localhost
-		port: 6379
-		password:
-		lettuce:
-			pool:
-				min-idle: 0
-				max-idle: 8
-				max-active: 8
-	...
-	```
-	- SMTP: 이메일 전송 시 사용, 기본값 smtp4dev, ~~Google SMTP~~
-	```
-	...
-	spring:
-		mail:
-		    host: localhost
-		    port: 25
-				...
-	```
-	- OAuth2: 기본값 Google, 타 OAuth2 사용 시 OAuth2UserInfo 구현체 추가 설정 필요
-	```
-	...
-	spring:
-		security:
-			oauth2:
-				client:
-					registration:
-						google:
-							client-id: { Google OAuth 2.0 Client-Id }
-							client-secret: { Google OAuth 2.0 Client-Secret }
-							scope:
-								- email
-								- profile
-	...
-	```
-	- File Upload Path: 파일 업로드 경로 등록
-	```
-	file:
-		upload:
-			location: { Upload Path }
-	```
-	- 더미 데이터 추가: InitDb.class
+- 기본 설정 구성
+  ![img](https://github.com/user-attachments/assets/a3926c72-fcd9-450f-b35c-b347608ba902)
+- DB 테이블(schema.sql) 생성 또는 spring.sql.init.mode 설정 활용
+- .env 파일 내 환경변수 입력(application.yml 참고)
+    ```
+    AWS_RDS_ENDPOINT=
+    AWS_RDS_DATABASE=
+    AWS_RDS_USERNAME=
+    AWS_RDS_PASSWORD= 
+    OAUTH_GOOGLE_CLIENT_ID=
+    OAUTH_GOOGLE_CLIENT_SECRET= 
+    SMTP_GOOGLE_USERNAME=
+    SMTP_GOOGLE_PASSWORD=
+    AWS_ACCESS_KEY= 
+    AWS_SECRET_KEY=
+    AWS_REGION=
+    FRONTEND_URL=
+    JWT_SECRET=
+    JWT_ISSUER= 
+    AWS_S3_BUCKET=
+    AWS_S3_UPLOAD_DIR=
+    ```
+    ```
+    spring:
+      datasource:
+        url: jdbc:mysql://${AWS_RDS_ENDPOINT}:3306/${AWS_RDS_DATABASE}
+        username: ${AWS_RDS_USERNAME}
+        password: ${AWS_RDS_PASSWORD}
+      security:
+        oauth2:
+          client:
+            registration:
+              google:
+                client-id: ${OAUTH_GOOGLE_CLIENT_ID}
+                client-secret: ${OAUTH_GOOGLE_CLIENT_SECRET}
+      mail:
+        host: smtp.gmail.com
+        port: 587
+        username: ${SMTP_GOOGLE_USERNAME}
+        password: ${SMTP_GOOGLE_PASSWORD}
+    cloud:
+      aws:
+        credentials:
+          access-key: ${AWS_ACCESS_KEY}
+          secret-key: ${AWS_SECRET_KEY}
+        region:
+          static: ${AWS_REGION}
+    app:
+      frontend:
+        url: ${FRONTEND_URL}
+    jwt:
+      secret: ${JWT_SECRET}
+      issuer: ${JWT_ISSUER}
+    email:
+      from: no-reply@${FRONTEND_URL}
+    aws:
+      s3:
+        bucket: ${AWS_S3_BUCKET}
+        upload-dir: ${AWS_S3_UPLOAD_DIR}
+    ```
+- 필요 시 더미 데이터 추가: InitDb.class
