@@ -52,8 +52,7 @@
         FROM tbl_members AS member
                  LEFT JOIN tbl_posts AS post ON (member.member_id = post.member_id)
                  LEFT JOIN tbl_comments AS comment ON (member.member_id = comment.member_id)
-        WHERE member.member_id = #{id}
-        GROUP BY member.member_id;
+        WHERE member.member_id = #{id};
     </select>
     
     <select id="findByIdAndDeleteYn" resultMap="MemberResultMap">
@@ -64,8 +63,7 @@
                  LEFT JOIN tbl_comments AS comment
                            ON member.member_id = comment.member_id AND comment.delete_yn = #{deleteYn}
         WHERE member.member_id = #{id}
-          AND member.delete_yn = #{deleteYn}
-        GROUP BY member.member_id;
+          AND member.delete_yn = #{deleteYn};
     </select>
     
     <select id="findByUsername" resultMap="MemberResultMap">
@@ -73,8 +71,7 @@
         FROM tbl_members AS member
                  LEFT JOIN tbl_posts AS post ON member.member_id = post.member_id
                  LEFT JOIN tbl_comments AS comment ON member.member_id = comment.member_id
-        WHERE member.username = LOWER(#{username})
-        GROUP BY member.member_id;
+        WHERE member.username = LOWER(#{username});
     </select>
     
     <select id="findByUsernameAndDeleteYn" resultMap="MemberResultMap">
@@ -85,16 +82,14 @@
                  LEFT JOIN tbl_comments AS comment
                            ON member.member_id = comment.member_id AND comment.delete_yn = #{deleteYn}
         WHERE member.username = LOWER(#{username})
-          AND member.delete_yn = #{deleteYn}
-        GROUP BY member.member_id;
+          AND member.delete_yn = #{deleteYn};
     </select>
     
     <select id="findAll" resultMap="MemberResultMap">
         SELECT member.*, post.post_id, comment.comment_id
         FROM tbl_members AS member
                  LEFT JOIN tbl_posts AS post ON member.member_id = post.member_id
-                 LEFT JOIN tbl_comments AS comment ON member.member_id = comment.member_id
-        GROUP BY member.member_id;
+                 LEFT JOIN tbl_comments AS comment ON member.member_id = comment.member_id;
     </select>
     
     <select id="findAllByAuth" resultMap="MemberResultMap">
@@ -102,8 +97,7 @@
         FROM tbl_members AS member
                  LEFT JOIN tbl_posts AS post ON member.member_id = post.member_id
                  LEFT JOIN tbl_comments AS comment ON member.member_id = comment.member_id
-        WHERE member.auth = #{auth}
-        GROUP BY member.member_id;
+        WHERE member.auth = #{auth};
     </select>
     
     <select id="findAllByDeleteYn" resultMap="MemberResultMap">
@@ -113,8 +107,7 @@
                            ON member.member_id = post.member_id AND post.delete_yn = #{deleteYn}
                  LEFT JOIN tbl_comments AS comment
                            ON member.member_id = comment.member_id AND comment.delete_yn = #{deleteYn}
-        WHERE member.delete_yn = #{deleteYn}
-        GROUP BY member.member_id;
+        WHERE member.delete_yn = #{deleteYn};
     </select>
     
     <update id="update">
