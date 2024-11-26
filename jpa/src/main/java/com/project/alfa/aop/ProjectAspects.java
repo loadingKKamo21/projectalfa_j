@@ -1,5 +1,6 @@
 package com.project.alfa.aop;
 
+import com.project.alfa.aop.lock.LockManager;
 import com.project.alfa.aop.trace.TraceStatus;
 import com.project.alfa.aop.trace.logtrace.LogTrace;
 import lombok.RequiredArgsConstructor;
@@ -45,12 +46,19 @@ public class ProjectAspects {
     
     @Aspect
     @Order(1)
+    @RequiredArgsConstructor
     public static class LockAspect {
         
-        private final ReentrantLock lock = new ReentrantLock();
+        private final LockManager lockManager;
         
         @Around("@annotation(com.project.alfa.aop.annotation.LockAop)")
         public Object execute(ProceedingJoinPoint joinPoint) throws Throwable {
+            String key = extractKeyFromArguments(joinPoint.getArgs());
+
+            if (key == null)
+                return joinPoint.proceed();
+
+            ReentrantLock lock = lockManager.getLock(key);
             int     attempts = 0;
             boolean isLocked = false;
             
@@ -73,11 +81,17 @@ public class ProjectAspects {
                 
                 return joinPoint.proceed();
             } finally {
-                if (isLocked)
+                if (isLocked) {
                     lock.unlock();
+                    lockManager.releaseLock(key, lock);
+                }
             }
         }
-        
+
+        private String extractKeyFromArguments(final Object[] args) {
+            return args.length > 0 ? String.valueOf(args[0]) : null;
+        }
+
     }
     
 }
